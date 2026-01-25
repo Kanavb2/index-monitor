@@ -58,6 +58,7 @@ async function proxyFetch(url) {
     try {
       const res = await fetch(wrapUrl(url), {
         signal: AbortSignal.timeout(12_000),
+        headers: { "Cache-Control": "no-cache" },
       });
       if (!res.ok) continue;
       return JSON.parse(await res.text());
@@ -103,10 +104,11 @@ function getSessionState(index) {
 /* ================================================================== */
 
 async function fetchIndex(index) {
+  const cacheBust = Math.floor(Date.now() / 30_000);
   const url =
     YAHOO_CHART_BASE +
     encodeURIComponent(index.sym) +
-    "?range=1d&interval=5m";
+    `?range=1d&interval=5m&_=${cacheBust}`;
 
   const json = await proxyFetch(url);
   const result = json.chart.result[0];
