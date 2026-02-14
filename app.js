@@ -88,15 +88,14 @@ function getSessionState(index) {
   );
 
   const weekday = parts.weekday;
-  if (weekday === "Sat" || weekday === "Sun") return "not-yet-open";
+  if (weekday === "Sat" || weekday === "Sun") return "closed";
 
   const mins = parseInt(parts.hour) * 60 + parseInt(parts.minute);
   const openMins  = index.mktOpen[0]  * 60 + index.mktOpen[1];
   const closeMins = index.mktClose[0] * 60 + index.mktClose[1];
 
-  if (mins < openMins)  return "not-yet-open";
-  if (mins <= closeMins) return "open";
-  return "closed-today";
+  if (mins >= openMins && mins <= closeMins) return "open";
+  return "closed";
 }
 
 /* ================================================================== */
@@ -212,19 +211,6 @@ function buildSparkline(closes, isPositive) {
 /*  Popup HTML builder                                                */
 /* ================================================================== */
 
-function buildPopupNotYetOpen(data) {
-  return `
-    <div class="popup-card popup-nyo">
-      <div class="popup-hdr">
-        <span>${data.fl} ${data.co}</span>
-        <span class="popup-nyo-badge">Not yet open</span>
-      </div>
-      <div class="popup-name">${data.name}</div>
-      <div class="popup-nyo-msg">This market has not opened for today\u2019s session yet.</div>
-      <div class="popup-desc">${data.desc}</div>
-    </div>`;
-}
-
 function buildPopupHTML(data) {
   const positive = data.change >= 0;
   const arrow = positive ? "\u25B2" : "\u25BC";
@@ -320,25 +306,9 @@ function updateMarker(data) {
     return;
   }
 
-  const session = data.session;
-
-  // Not yet open — gray, dim, no performance data
-  if (session === "not-yet-open") {
-    marker.setStyle({ fillColor: "#3a3f52", color: "#3a3f52", fillOpacity: 0.45, opacity: 0.15, weight: 2 });
-    marker.setRadius(5);
-    marker.bindTooltip(
-      `<span class="tt-name">${data.name}</span> <span class="tt-pct" style="color:var(--text-muted)">not yet open</span>`,
-      { className: "idx-tooltip", direction: "top", offset: [0, -6] }
-    );
-    marker.bindPopup(buildPopupNotYetOpen(data), { className: "idx-popup", maxWidth: 300, minWidth: 240 });
-    marker.on("mouseover", function () { this.setRadius(7); this.setStyle({ fillOpacity: 0.6 }); });
-    marker.on("mouseout",  function () { this.setRadius(5); this.setStyle({ fillOpacity: 0.45 }); });
-    return;
-  }
-
-  // Active market (open or closed-today) — color by performance
+  // Color by performance, style by session state
   const positive = data.change >= 0;
-  const isOpen = session === "open";
+  const isOpen = data.session === "open";
 
   let baseRadius, baseFill, baseWeight, baseOpacity, fillColor, strokeColor;
 
@@ -385,16 +355,12 @@ function renderSummary(list, total) {
   const doneCount = loaded.length + failed.length;
   const loading = doneCount < total;
 
-  // Only indices that have traded today count as "active"
-  const active = loaded.filter((d) => d.session === "open" || d.session === "closed-today");
-  const notYet = loaded.filter((d) => d.session === "not-yet-open");
+  const liveList   = loaded.filter((d) => d.session === "open");
+  const closedList = loaded.filter((d) => d.session === "closed");
 
-  const liveList   = active.filter((d) => d.session === "open");
-  const closedList = active.filter((d) => d.session === "closed-today");
-
-  const up   = active.filter((d) => d.change > 0).length;
-  const down = active.filter((d) => d.change < 0).length;
-  const flat = active.filter((d) => d.change === 0).length;
+  const up   = loaded.filter((d) => d.change > 0).length;
+  const down = loaded.filter((d) => d.change < 0).length;
+  const flat = loaded.filter((d) => d.change === 0).length;
 
   const closedAvg = closedList.length
     ? closedList.reduce((s, d) => s + d.changePercent, 0) / closedList.length
@@ -403,17 +369,17 @@ function renderSummary(list, total) {
   let best = null;
   let worst = null;
   let sumPct = 0;
-  active.forEach((d) => {
+  loaded.forEach((d) => {
     sumPct += d.changePercent;
     if (!best || d.changePercent > best.changePercent) best = d;
     if (!worst || d.changePercent < worst.changePercent) worst = d;
   });
 
-  const avgPct = active.length ? sumPct / active.length : 0;
+  const avgPct = loaded.length ? sumPct / loaded.length : 0;
 
   let sentiment = "Neutral";
-  if (active.length > 0) {
-    const ratio = up / active.length;
+  if (loaded.length > 0) {
+    const ratio = up / loaded.length;
     if (ratio >= 0.65)      sentiment = "Bullish";
     else if (ratio >= 0.5)  sentiment = "Mildly bullish";
     else if (ratio > 0.35)  sentiment = "Mildly bearish";
@@ -422,17 +388,16 @@ function renderSummary(list, total) {
 
   const sentimentClass = avgPct >= 0 ? "up" : "down";
 
-  let html = `<div class="panel-heading">Today\u2019s Markets</div>`;
+  let html = `<div class="panel-heading">Market Overview</div>`;
   html += `<div class="panel-row"><span class="panel-dot up"></span><span class="panel-label">Advancing</span><span class="panel-val">${up}</span></div>`;
   html += `<div class="panel-row"><span class="panel-dot down"></span><span class="panel-label">Declining</span><span class="panel-val">${down}</span></div>`;
   if (flat) html += `<div class="panel-row"><span class="panel-dot flat"></span><span class="panel-label">Unchanged</span><span class="panel-val">${flat}</span></div>`;
   html += `<div class="panel-divider"></div>`;
   const closedDotClass = closedList.length ? (closedAvg >= 0 ? "up" : "down") : "closed";
   html += `<div class="panel-row"><span class="panel-dot live"></span><span class="panel-label">Live</span><span class="panel-val">${liveList.length}</span></div>`;
-  html += `<div class="panel-row"><span class="panel-dot ${closedDotClass}"></span><span class="panel-label">Closed today</span><span class="panel-val">${closedList.length}</span></div>`;
-  html += `<div class="panel-row muted"><span class="panel-dot nyo"></span><span class="panel-label">Not yet open</span><span class="panel-val">${notYet.length}</span></div>`;
+  html += `<div class="panel-row"><span class="panel-dot ${closedDotClass}"></span><span class="panel-label">Closed</span><span class="panel-val">${closedList.length}</span></div>`;
 
-  if (active.length > 0) {
+  if (loaded.length > 0) {
     html += `<div class="panel-divider"></div>`;
     html += `<div class="panel-metric"><span class="panel-metric-label">Avg Change</span><span class="panel-metric-val ${sentimentClass}">${formatPercent(avgPct)}</span></div>`;
     html += `<div class="panel-metric"><span class="panel-metric-label">Sentiment</span><span class="panel-metric-val ${sentimentClass}">${sentiment}</span></div>`;

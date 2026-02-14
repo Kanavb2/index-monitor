@@ -216,16 +216,11 @@ body {
 .panel-dot.flat   { background: var(--text-muted); }
 .panel-dot.live   { background: var(--accent); box-shadow: 0 0 4px var(--accent); }
 .panel-dot.closed { background: var(--text-sec); }
-.panel-dot.nyo    { background: #3a3f52; border: 1px solid var(--text-muted); }
 
 .panel-label {
   color: var(--text-sec);
 }
 
-.panel-row.muted .panel-label,
-.panel-row.muted .panel-val {
-  color: var(--text-muted);
-}
 
 .panel-val {
   font-weight: 700;
@@ -480,32 +475,6 @@ body {
   line-height: 1.45;
 }
 
-/* Not-yet-open popup */
-
-.popup-nyo .popup-hdr {
-  margin-bottom: 0.1rem;
-}
-
-.popup-nyo-badge {
-  color: var(--text-muted);
-  font-size: 0.66rem;
-  font-weight: 600;
-  padding: 0.1rem 0.4rem;
-  background: rgba(82, 92, 116, 0.3);
-  border-radius: 4px;
-}
-
-.popup-nyo .popup-name {
-  margin-bottom: 0.45rem;
-}
-
-.popup-nyo-msg {
-  color: var(--text-sec);
-  font-size: 0.76rem;
-  margin-bottom: 0.6rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid var(--border);
-}
 
 /* ------------------------------------------------------------------ */
 /*  Responsive                                                        */
