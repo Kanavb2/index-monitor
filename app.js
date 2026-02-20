@@ -333,7 +333,12 @@ function updateMarker(data) {
   marker.setStyle({ fillColor, color: strokeColor, fillOpacity: baseFill, opacity: baseOpacity, weight: baseWeight });
   marker.setRadius(baseRadius);
 
-  const statusLabel = isOpen ? "live" : "closed";
+  const mktDate = new Date(data.marketTime * 1000).toLocaleDateString("en-US", {
+    timeZone: data.tz,
+    month: "short",
+    day: "numeric",
+  });
+  const statusLabel = isOpen ? "live" : mktDate;
   marker.bindTooltip(
     `<span class="tt-name">${data.name}</span> <span class="tt-pct ${positive ? "up" : "down"}">${formatPercent(data.changePercent)}</span> <span class="tt-status">${statusLabel}</span>`,
     { className: "idx-tooltip", direction: "top", offset: [0, -8] }
@@ -403,7 +408,7 @@ function renderSummary(list, total) {
     html += `<div class="panel-metric"><span class="panel-metric-label">Sentiment</span><span class="panel-metric-val ${sentimentClass}">${sentiment}</span></div>`;
   }
 
-  if (best && worst && active.length > 1) {
+  if (best && worst && loaded.length > 1) {
     html += `<div class="panel-divider"></div>`;
     html += `<div class="panel-perf">Best <strong>${best.name}</strong> <span class="up">${formatPercent(best.changePercent)}</span></div>`;
     html += `<div class="panel-perf">Worst <strong>${worst.name}</strong> <span class="down">${formatPercent(worst.changePercent)}</span></div>`;
