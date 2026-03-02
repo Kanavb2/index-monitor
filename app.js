@@ -76,18 +76,36 @@ async function fetchIndex(index) {
   const json = await proxyFetch(url);
   const result = json.chart.result[0];
   const meta = result.meta;
-
   const price = meta.regularMarketPrice;
-  const previousClose = meta.previousClose ?? meta.chartPreviousClose;
-  const change = price - previousClose;
-  const changePercent = (change / previousClose) * 100;
 
-  let closes = (result.indicators?.quote?.[0]?.close ?? []).filter(
-    (v) => v != null
-  );
-  if (price && (closes.length === 0 || closes[closes.length - 1] !== price)) {
-    closes.push(price);
+  // Build the list of valid daily closes from the chart data
+  const rawCloses = result.indicators?.quote?.[0]?.close ?? [];
+  const validCloses = rawCloses.filter((v) => v != null);
+
+  // Sparkline: all daily closes + current live price at the end
+  const sparkCloses = [...validCloses];
+  if (
+    price &&
+    (sparkCloses.length === 0 || sparkCloses[sparkCloses.length - 1] !== price)
+  ) {
+    sparkCloses.push(price);
   }
+
+  // Previous close: use the second-to-last daily close from the chart.
+  // The last entry is today's (or the most recent session); the one before
+  // it is the prior trading day's close — which is what we need for the
+  // daily change calculation.  meta.previousClose is missing for some
+  // indices, and meta.chartPreviousClose is the close from before the
+  // entire chart range (≈ 1 month ago), so neither is reliable.
+  let previousClose;
+  if (validCloses.length >= 2) {
+    previousClose = validCloses[validCloses.length - 2];
+  } else {
+    previousClose = meta.previousClose ?? meta.chartPreviousClose ?? price;
+  }
+
+  const change = price - previousClose;
+  const changePercent = previousClose ? (change / previousClose) * 100 : 0;
 
   return {
     ...index,
@@ -95,7 +113,7 @@ async function fetchIndex(index) {
     previousClose,
     change,
     changePercent,
-    closes,
+    closes: sparkCloses,
     marketTime: meta.regularMarketTime,
     ok: true,
   };
