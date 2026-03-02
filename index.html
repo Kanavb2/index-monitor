@@ -7,7 +7,7 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -15,7 +15,7 @@
     <header>
       <div class="hdr-left">
         <h1>Global Index Monitor</h1>
-        <p>Real-time world market data</p>
+        <p id="headerDate"></p>
       </div>
       <div class="hdr-right">
         <label class="auto-refresh">
@@ -39,6 +39,25 @@
 
     <div class="summary" id="summary"></div>
 
+    <div class="toolbar">
+      <div class="search-wrap">
+        <svg class="search-ico" width="16" height="16" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="text" id="searchInput" class="search-input" placeholder="Search by index, country, or region...">
+      </div>
+      <div class="sort-wrap">
+        <label class="sort-label">Sort</label>
+        <select id="sortSelect" class="sort-select">
+          <option value="region">Region</option>
+          <option value="change-desc">Best performing</option>
+          <option value="change-asc">Worst performing</option>
+          <option value="name">Name A–Z</option>
+        </select>
+      </div>
+    </div>
+
     <div class="err-banner" id="errBanner">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <circle cx="12" cy="12" r="10"/>
@@ -49,6 +68,11 @@
     </div>
 
     <main id="main"></main>
+
+    <footer>
+      <p>Data sourced from Yahoo Finance. Prices may be delayed.</p>
+      <p>Press <kbd>R</kbd> to refresh.</p>
+    </footer>
   </div>
 
   <script src="app.js"></script>

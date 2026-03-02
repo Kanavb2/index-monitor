@@ -4,35 +4,34 @@
 
 const INDICES = [
   // Americas
-  { sym: "^GSPC",      name: "S&P 500",            co: "United States", fl: "\u{1F1FA}\u{1F1F8}", rg: "Americas",             desc: "Large cap benchmark covering approximately 80% of U.S. equity market capitalization." },
-  { sym: "^GSPTSE",    name: "S&P/TSX Composite",  co: "Canada",        fl: "\u{1F1E8}\u{1F1E6}", rg: "Americas",             desc: "Broad benchmark for the Canadian equity market." },
-  { sym: "^BVSP",      name: "Ibovespa",           co: "Brazil",        fl: "\u{1F1E7}\u{1F1F7}", rg: "Americas",             desc: "Main benchmark of Brazilian equities." },
-  { sym: "^MXX",       name: "S&P/BMV IPC",        co: "Mexico",        fl: "\u{1F1F2}\u{1F1FD}", rg: "Americas",             desc: "Flagship Mexican equity index." },
+  { sym: "^GSPC",      name: "S&P 500",             co: "United States",  fl: "\u{1F1FA}\u{1F1F8}", rg: "Americas",      desc: "Large cap benchmark covering approximately 80% of U.S. equity market capitalization." },
+  { sym: "^GSPTSE",    name: "S&P/TSX Composite",   co: "Canada",         fl: "\u{1F1E8}\u{1F1E6}", rg: "Americas",      desc: "Broad benchmark for the Canadian equity market." },
+  { sym: "^BVSP",      name: "Ibovespa",            co: "Brazil",         fl: "\u{1F1E7}\u{1F1F7}", rg: "Americas",      desc: "Main benchmark of Brazilian equities." },
+  { sym: "^MXX",       name: "S&P/BMV IPC",         co: "Mexico",         fl: "\u{1F1F2}\u{1F1FD}", rg: "Americas",      desc: "Flagship Mexican equity index." },
 
   // Europe
-  { sym: "^FTSE",      name: "FTSE 100",           co: "United Kingdom", fl: "\u{1F1EC}\u{1F1E7}", rg: "Europe",              desc: "Large cap index representing the largest companies listed in London." },
-  { sym: "^GDAXI",     name: "DAX",                co: "Germany",        fl: "\u{1F1E9}\u{1F1EA}", rg: "Europe",              desc: "Tracks 40 major German blue chip companies." },
-  { sym: "^FCHI",      name: "CAC 40",             co: "France",         fl: "\u{1F1EB}\u{1F1F7}", rg: "Europe",              desc: "Leading benchmark of large French equities." },
-  { sym: "^SSMI",      name: "SMI",                co: "Switzerland",    fl: "\u{1F1E8}\u{1F1ED}", rg: "Europe",              desc: "Swiss Market Index covering major Swiss blue chips." },
-  { sym: "^AEX",       name: "AEX",                co: "Netherlands",    fl: "\u{1F1F3}\u{1F1F1}", rg: "Europe",              desc: "Tracks leading Dutch listed companies." },
-  { sym: "FTSEMIB.MI", name: "FTSE MIB",           co: "Italy",          fl: "\u{1F1EE}\u{1F1F9}", rg: "Europe",              desc: "Large cap Italian equity benchmark." },
-  { sym: "^IBEX",      name: "IBEX 35",            co: "Spain",          fl: "\u{1F1EA}\u{1F1F8}", rg: "Europe",              desc: "Principal Spanish stock market index." },
+  { sym: "^FTSE",      name: "FTSE 100",            co: "United Kingdom", fl: "\u{1F1EC}\u{1F1E7}", rg: "Europe",        desc: "Large cap index representing the largest companies listed in London." },
+  { sym: "^GDAXI",     name: "DAX",                 co: "Germany",        fl: "\u{1F1E9}\u{1F1EA}", rg: "Europe",        desc: "Tracks 40 major German blue chip companies." },
+  { sym: "^FCHI",      name: "CAC 40",              co: "France",         fl: "\u{1F1EB}\u{1F1F7}", rg: "Europe",        desc: "Leading benchmark of large French equities." },
+  { sym: "^SSMI",      name: "SMI",                 co: "Switzerland",    fl: "\u{1F1E8}\u{1F1ED}", rg: "Europe",        desc: "Swiss Market Index covering major Swiss blue chips." },
+  { sym: "^AEX",       name: "AEX",                 co: "Netherlands",    fl: "\u{1F1F3}\u{1F1F1}", rg: "Europe",        desc: "Tracks leading Dutch listed companies." },
+  { sym: "FTSEMIB.MI", name: "FTSE MIB",            co: "Italy",          fl: "\u{1F1EE}\u{1F1F9}", rg: "Europe",        desc: "Large cap Italian equity benchmark." },
+  { sym: "^IBEX",      name: "IBEX 35",             co: "Spain",          fl: "\u{1F1EA}\u{1F1F8}", rg: "Europe",        desc: "Principal Spanish stock market index." },
 
   // Asia Pacific
-  { sym: "^N225",      name: "Nikkei 225",         co: "Japan",          fl: "\u{1F1EF}\u{1F1F5}", rg: "Asia Pacific",        desc: "Price weighted index of major Japanese companies." },
-  { sym: "000300.SS",  name: "CSI 300",            co: "China",          fl: "\u{1F1E8}\u{1F1F3}", rg: "Asia Pacific",        desc: "Represents large and mid cap A-shares from Shanghai and Shenzhen." },
-  { sym: "^NSEI",      name: "NIFTY 50",           co: "India",          fl: "\u{1F1EE}\u{1F1F3}", rg: "Asia Pacific",        desc: "Tracks 50 major Indian companies listed on NSE." },
-  { sym: "^KS11",      name: "KOSPI",              co: "South Korea",    fl: "\u{1F1F0}\u{1F1F7}", rg: "Asia Pacific",        desc: "Primary benchmark of the Korean equity market." },
-  { sym: "^AXJO",      name: "S&P/ASX 200",        co: "Australia",      fl: "\u{1F1E6}\u{1F1FA}", rg: "Asia Pacific",        desc: "Covers the 200 largest companies listed in Australia." },
-  { sym: "^HSI",       name: "Hang Seng Index",    co: "Hong Kong",      fl: "\u{1F1ED}\u{1F1F0}", rg: "Asia Pacific",        desc: "Tracks major companies listed in Hong Kong." },
-  { sym: "^STI",       name: "Straits Times Index", co: "Singapore",     fl: "\u{1F1F8}\u{1F1EC}", rg: "Asia Pacific",        desc: "Benchmark for Singapore\u2019s leading listed firms." },
+  { sym: "^N225",      name: "Nikkei 225",          co: "Japan",          fl: "\u{1F1EF}\u{1F1F5}", rg: "Asia Pacific",  desc: "Price weighted index of major Japanese companies." },
+  { sym: "000300.SS",  name: "CSI 300",             co: "China",          fl: "\u{1F1E8}\u{1F1F3}", rg: "Asia Pacific",  desc: "Represents large and mid cap A-shares from Shanghai and Shenzhen." },
+  { sym: "^NSEI",      name: "NIFTY 50",            co: "India",          fl: "\u{1F1EE}\u{1F1F3}", rg: "Asia Pacific",  desc: "Tracks 50 major Indian companies listed on NSE." },
+  { sym: "^KS11",      name: "KOSPI",               co: "South Korea",    fl: "\u{1F1F0}\u{1F1F7}", rg: "Asia Pacific",  desc: "Primary benchmark of the Korean equity market." },
+  { sym: "^AXJO",      name: "S&P/ASX 200",         co: "Australia",      fl: "\u{1F1E6}\u{1F1FA}", rg: "Asia Pacific",  desc: "Covers the 200 largest companies listed in Australia." },
+  { sym: "^HSI",       name: "Hang Seng Index",     co: "Hong Kong",      fl: "\u{1F1ED}\u{1F1F0}", rg: "Asia Pacific",  desc: "Tracks major companies listed in Hong Kong." },
+  { sym: "^STI",       name: "Straits Times Index",  co: "Singapore",     fl: "\u{1F1F8}\u{1F1EC}", rg: "Asia Pacific",  desc: "Benchmark for Singapore\u2019s leading listed firms." },
 
-  // Middle East & Africa
-  { sym: "^TASI",      name: "Tadawul All Share",  co: "Saudi Arabia",   fl: "\u{1F1F8}\u{1F1E6}", rg: "Middle East & Africa", desc: "Primary benchmark of the Saudi market." },
-  { sym: "^J200.JO",   name: "FTSE/JSE Top 40",    co: "South Africa",   fl: "\u{1F1FF}\u{1F1E6}", rg: "Middle East & Africa", desc: "Large cap benchmark for South Africa." },
+  // Africa
+  { sym: "^J200.JO",   name: "FTSE/JSE Top 40",     co: "South Africa",  fl: "\u{1F1FF}\u{1F1E6}", rg: "Africa",        desc: "Large cap benchmark for South Africa." },
 ];
 
-const REGIONS = ["Americas", "Europe", "Asia Pacific", "Middle East & Africa"];
+const REGIONS = ["Americas", "Europe", "Asia Pacific", "Africa"];
 
 const CORS_PROXIES = [
   (u) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
@@ -46,7 +45,9 @@ const YAHOO_CHART_BASE = "https://query1.finance.yahoo.com/v8/finance/chart/";
 /* ================================================================== */
 
 let cache = {};
+let latestResults = [];
 let autoRefreshTimer = null;
+let cardObserver = null;
 
 /* ================================================================== */
 /*  Networking                                                        */
@@ -78,16 +79,16 @@ async function fetchIndex(index) {
   const meta = result.meta;
 
   const price = meta.regularMarketPrice;
-
-  // With range=1d, chartPreviousClose is always the prior trading day's
-  // closing price — exactly what Google Finance shows as "Previous close".
   const previousClose = meta.chartPreviousClose;
   const change = price - previousClose;
   const changePercent = previousClose ? (change / previousClose) * 100 : 0;
 
-  // Intraday 5-minute closes for the sparkline
   const rawCloses = result.indicators?.quote?.[0]?.close ?? [];
   const closes = rawCloses.filter((v) => v != null);
+
+  const dayHigh = closes.length ? Math.max(...closes) : price;
+  const dayLow = closes.length ? Math.min(...closes) : price;
+  const currency = meta.currency || "";
 
   return {
     ...index,
@@ -96,6 +97,9 @@ async function fetchIndex(index) {
     change,
     changePercent,
     closes,
+    dayHigh,
+    dayLow,
+    currency,
     marketTime: meta.regularMarketTime,
     ok: true,
   };
@@ -123,6 +127,15 @@ function formatPercent(n) {
   return (n >= 0 ? "+" : "") + n.toFixed(2) + "%";
 }
 
+function timeAgo(unixTs) {
+  if (!unixTs) return "";
+  const seconds = Math.floor(Date.now() / 1000 - unixTs);
+  if (seconds < 60) return "just now";
+  if (seconds < 3600) return Math.floor(seconds / 60) + "m ago";
+  if (seconds < 86400) return Math.floor(seconds / 3600) + "h ago";
+  return Math.floor(seconds / 86400) + "d ago";
+}
+
 /* ================================================================== */
 /*  Sparkline SVG builder                                             */
 /* ================================================================== */
@@ -130,8 +143,8 @@ function formatPercent(n) {
 function buildSparkline(closes, isPositive) {
   if (!closes || closes.length < 2) return "";
 
-  const W = 84;
-  const H = 34;
+  const W = 90;
+  const H = 36;
   const PAD = 2;
   const lo = Math.min(...closes);
   const hi = Math.max(...closes);
@@ -144,7 +157,7 @@ function buildSparkline(closes, isPositive) {
   });
 
   const color = isPositive ? "var(--pos)" : "var(--neg)";
-  const gradientId = "g" + Math.random().toString(36).slice(2, 8);
+  const gid = "g" + Math.random().toString(36).slice(2, 8);
   const areaPoints = [
     ...points,
     `${(PAD + W - 2 * PAD).toFixed(1)},${H}`,
@@ -154,15 +167,39 @@ function buildSparkline(closes, isPositive) {
   return `
     <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
       <defs>
-        <linearGradient id="${gradientId}" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%"   stop-color="${color}" stop-opacity=".28"/>
+        <linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stop-color="${color}" stop-opacity=".25"/>
           <stop offset="100%" stop-color="${color}" stop-opacity="0"/>
         </linearGradient>
       </defs>
-      <polygon  points="${areaPoints}" fill="url(#${gradientId})"/>
+      <polygon  points="${areaPoints}" fill="url(#${gid})"/>
       <polyline points="${points.join(" ")}" fill="none" stroke="${color}"
                 stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>`;
+}
+
+/* ================================================================== */
+/*  Day range bar                                                     */
+/* ================================================================== */
+
+function buildRangeBar(data) {
+  const { dayLow, dayHigh, price } = data;
+  if (!dayLow || !dayHigh || dayLow === dayHigh) return "";
+
+  const pct = ((price - dayLow) / (dayHigh - dayLow)) * 100;
+  const clampedPct = Math.max(0, Math.min(100, pct));
+
+  return `
+    <div class="range-bar-wrap">
+      <div class="range-bar-labels">
+        <span class="detail-label">Day Range</span>
+        <span class="detail-value" style="font-size:.72rem">${formatPrice(dayLow)} \u2013 ${formatPrice(dayHigh)}</span>
+      </div>
+      <div class="range-bar-track">
+        <div class="range-bar-fill" style="width:${clampedPct}%"></div>
+        <div class="range-bar-marker" style="left:${clampedPct}%"></div>
+      </div>
+    </div>`;
 }
 
 /* ================================================================== */
@@ -173,29 +210,29 @@ function isMarketOpen(data) {
   return data.marketTime && Date.now() / 1000 - data.marketTime < 300;
 }
 
-function createCard(data, animationDelay) {
+function createCard(data) {
   const el = document.createElement("div");
   el.className = "card";
-  el.style.animationDelay = animationDelay * 40 + "ms";
   el.dataset.sym = data.sym;
 
   const headerHTML = `
-    <div class="card-hdr"><div>
-      <div class="card-country"><span class="fl">${data.fl}</span>${data.co}</div>
-      <div class="card-name">${data.name}</div>
-    </div></div>`;
+    <div class="card-hdr">
+      <div>
+        <div class="card-country"><span class="fl">${data.fl}</span>${data.co}</div>
+        <div class="card-name">${data.name}</div>
+      </div>
+    </div>`;
 
-  // Loading skeleton
   if (!data.ok && !data.err) {
     el.innerHTML = `
       ${headerHTML}
       <div class="sk sk-price"></div>
       <div class="sk sk-chg"></div>
+      <div class="sk sk-details"></div>
       <div class="sk sk-desc"></div>`;
     return el;
   }
 
-  // Error state
   if (data.err) {
     el.innerHTML = `
       ${headerHTML}
@@ -207,7 +244,6 @@ function createCard(data, animationDelay) {
     return el;
   }
 
-  // Loaded state
   const positive = data.change >= 0;
   const arrow = positive ? "&#9650;" : "&#9660;";
   const open = isMarketOpen(data);
@@ -219,8 +255,11 @@ function createCard(data, animationDelay) {
         <div class="card-country"><span class="fl">${data.fl}</span>${data.co}</div>
         <div class="card-name">${data.name}</div>
       </div>
-      <div class="mkt-status">
-        <span class="s-dot ${open ? "on" : ""}"></span>${open ? "Open" : "Closed"}
+      <div class="card-meta">
+        <div class="mkt-status">
+          <span class="s-dot ${open ? "on" : ""}"></span>${open ? "Open" : "Closed"}
+        </div>
+        ${data.currency ? `<div class="card-currency">${data.currency}</div>` : ""}
       </div>
     </div>
     <div class="card-mid">
@@ -231,34 +270,122 @@ function createCard(data, animationDelay) {
       <span>${arrow} ${formatChange(data.change)}</span>
       <span class="chg-badge">${formatPercent(data.changePercent)}</span>
     </div>
-    <div class="card-desc">${data.desc}</div>`;
+    <div class="card-details">
+      <div class="detail-item">
+        <span class="detail-label">Prev Close</span>
+        <span class="detail-value">${formatPrice(data.previousClose)}</span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">Open</span>
+        <span class="detail-value">${data.closes.length ? formatPrice(data.closes[0]) : "\u2014"}</span>
+      </div>
+      ${buildRangeBar(data)}
+    </div>
+    <div class="card-foot">
+      <div class="card-desc">${data.desc}</div>
+      <div class="card-ago">${timeAgo(data.marketTime)}</div>
+    </div>`;
   return el;
+}
+
+/* ================================================================== */
+/*  IntersectionObserver for lazy card animations                     */
+/* ================================================================== */
+
+function setupObserver() {
+  if (cardObserver) cardObserver.disconnect();
+
+  cardObserver = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("visible");
+          cardObserver.unobserve(entry.target);
+        }
+      });
+    },
+    { threshold: 0.08, rootMargin: "40px" }
+  );
+
+  document.querySelectorAll(".card").forEach((card) => {
+    cardObserver.observe(card);
+  });
+}
+
+/* ================================================================== */
+/*  Sorting & filtering                                               */
+/* ================================================================== */
+
+function getFilteredSorted(list) {
+  const query = (document.getElementById("searchInput")?.value || "").toLowerCase().trim();
+  const sort = document.getElementById("sortSelect")?.value || "region";
+
+  let filtered = list;
+  if (query) {
+    filtered = list.filter(
+      (d) =>
+        d.name.toLowerCase().includes(query) ||
+        d.co.toLowerCase().includes(query) ||
+        d.rg.toLowerCase().includes(query) ||
+        d.sym.toLowerCase().includes(query)
+    );
+  }
+
+  const regionOrder = Object.fromEntries(REGIONS.map((r, i) => [r, i]));
+
+  switch (sort) {
+    case "change-desc":
+      filtered.sort((a, b) => (b.changePercent ?? -999) - (a.changePercent ?? -999));
+      break;
+    case "change-asc":
+      filtered.sort((a, b) => (a.changePercent ?? 999) - (b.changePercent ?? 999));
+      break;
+    case "name":
+      filtered.sort((a, b) => a.name.localeCompare(b.name));
+      break;
+    default:
+      filtered.sort((a, b) => (regionOrder[a.rg] ?? 99) - (regionOrder[b.rg] ?? 99));
+  }
+
+  return { filtered, sort };
 }
 
 /* ================================================================== */
 /*  Page rendering                                                    */
 /* ================================================================== */
 
-function renderAllCards(list) {
+function renderCards(list) {
   const main = document.getElementById("main");
   main.innerHTML = "";
-  let delay = 0;
 
-  for (const region of REGIONS) {
-    const items = list.filter((d) => d.rg === region);
-    if (!items.length) continue;
+  const { filtered, sort } = getFilteredSorted(list);
 
-    const section = document.createElement("section");
-    section.className = "region";
-    section.innerHTML = `<h2 class="region-title">${region}</h2>`;
+  if (filtered.length === 0) {
+    main.innerHTML = `<div class="no-results"><span>\u{1F50D}</span>No indices match your search.</div>`;
+    return;
+  }
 
+  if (sort === "region") {
+    for (const region of REGIONS) {
+      const items = filtered.filter((d) => d.rg === region);
+      if (!items.length) continue;
+      const section = document.createElement("section");
+      section.className = "region";
+      section.innerHTML = `<h2 class="region-title">${region}</h2>`;
+      const grid = document.createElement("div");
+      grid.className = "grid";
+      items.forEach((d) => grid.appendChild(createCard(d)));
+      section.appendChild(grid);
+      main.appendChild(section);
+    }
+  } else {
     const grid = document.createElement("div");
     grid.className = "grid";
-    items.forEach((d) => grid.appendChild(createCard(d, delay++)));
-
-    section.appendChild(grid);
-    main.appendChild(section);
+    filtered.forEach((d) => grid.appendChild(createCard(d)));
+    main.appendChild(grid);
   }
+
+  setupObserver();
 }
 
 function renderSummary(list) {
@@ -267,13 +394,30 @@ function renderSummary(list) {
   const down = loaded.filter((d) => d.change < 0).length;
   const flat = loaded.filter((d) => d.change === 0).length;
 
+  let best = null;
+  let worst = null;
+  loaded.forEach((d) => {
+    if (!best || d.changePercent > best.changePercent) best = d;
+    if (!worst || d.changePercent < worst.changePercent) worst = d;
+  });
+
   const el = document.getElementById("summary");
-  el.innerHTML =
+  let html =
     `<div class="summary-chip up"><span class="chip-dot"></span>${up} advancing</div>` +
-    `<div class="summary-chip down"><span class="chip-dot"></span>${down} declining</div>` +
-    (flat
-      ? `<div class="summary-chip flat"><span class="chip-dot"></span>${flat} unchanged</div>`
-      : "");
+    `<div class="summary-chip down"><span class="chip-dot"></span>${down} declining</div>`;
+
+  if (flat) {
+    html += `<div class="summary-chip flat"><span class="chip-dot"></span>${flat} unchanged</div>`;
+  }
+
+  if (best && worst && loaded.length > 1) {
+    html += `<span class="summary-divider"></span>`;
+    html += `<span class="summary-performer">Best <strong>${best.name}</strong> <span class="perf-val up">${formatPercent(best.changePercent)}</span></span>`;
+    html += `<span class="summary-divider"></span>`;
+    html += `<span class="summary-performer">Worst <strong>${worst.name}</strong> <span class="perf-val down">${formatPercent(worst.changePercent)}</span></span>`;
+  }
+
+  el.innerHTML = html;
 }
 
 /* ================================================================== */
@@ -284,8 +428,7 @@ async function refresh() {
   const btn = document.getElementById("btnRef");
   btn.classList.add("spin");
 
-  // Show loading skeletons immediately
-  renderAllCards(INDICES.map((i) => ({ ...i, ok: false, err: false })));
+  renderCards(INDICES.map((i) => ({ ...i, ok: false, err: false })));
 
   let failCount = 0;
   const results = await Promise.all(
@@ -301,10 +444,10 @@ async function refresh() {
     })
   );
 
-  renderAllCards(results);
+  latestResults = results;
+  renderCards(results);
   renderSummary(results);
 
-  // Error banner
   const banner = document.getElementById("errBanner");
   if (failCount) {
     banner.classList.add("show");
@@ -327,15 +470,11 @@ async function retrySingle(sym) {
     const result = await fetchIndex(idx);
     cache[sym] = result;
 
-    const el = document.querySelector(`[data-sym="${CSS.escape(sym)}"]`);
-    if (el) el.replaceWith(createCard(result, 0));
-
-    const all = INDICES.map(
-      (i) => cache[i.sym] || { ...i, ok: false, err: true }
-    );
-    renderSummary(all);
+    latestResults = latestResults.map((r) => (r.sym === sym ? result : r));
+    renderCards(latestResults);
+    renderSummary(latestResults);
   } catch {
-    /* still broken – card keeps its error state */
+    /* still broken */
   }
 }
 
@@ -343,11 +482,36 @@ async function retrySingle(sym) {
 /*  Event listeners & bootstrap                                       */
 /* ================================================================== */
 
+// Header date
+document.getElementById("headerDate").textContent = new Date().toLocaleDateString(
+  "en-US",
+  { weekday: "long", year: "numeric", month: "long", day: "numeric" }
+);
+
+// Auto-refresh toggle
 document.getElementById("arToggle").addEventListener("change", function () {
   clearInterval(autoRefreshTimer);
   autoRefreshTimer = this.checked ? setInterval(refresh, 60_000) : null;
 });
 
+// Refresh button
 document.getElementById("btnRef").addEventListener("click", refresh);
 
+// Search + sort (re-render existing data without re-fetching)
+document.getElementById("searchInput").addEventListener("input", () => {
+  if (latestResults.length) renderCards(latestResults);
+});
+
+document.getElementById("sortSelect").addEventListener("change", () => {
+  if (latestResults.length) renderCards(latestResults);
+});
+
+// Keyboard shortcut: R to refresh
+document.addEventListener("keydown", (e) => {
+  if (e.key === "r" && !e.metaKey && !e.ctrlKey && e.target.tagName !== "INPUT") {
+    refresh();
+  }
+});
+
+// Go
 refresh();
