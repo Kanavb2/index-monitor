@@ -8,11 +8,12 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="wrap">
-    <header>
+  <div class="app">
+    <header class="map-header">
       <div class="hdr-left">
         <h1>Global Index Monitor</h1>
         <p id="headerDate"></p>
@@ -37,24 +38,12 @@
       </div>
     </header>
 
-    <div class="summary" id="summary"></div>
+    <div id="map"></div>
 
-    <div class="err-banner" id="errBanner">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="12" cy="12" r="10"/>
-        <line x1="12" y1="8" x2="12" y2="12"/>
-        <line x1="12" y1="16" x2="12.01" y2="16"/>
-      </svg>
-      <span id="errMsg"></span>
-    </div>
-
-    <main id="main"></main>
-
-    <footer>
-      <p>Data sourced from Yahoo Finance. Prices may be delayed.</p>
-    </footer>
+    <div class="map-panel" id="summaryPanel"></div>
   </div>
 
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

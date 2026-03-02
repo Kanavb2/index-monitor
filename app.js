@@ -1,37 +1,31 @@
 /* ================================================================== */
-/*  Index definitions                                                 */
+/*  Index definitions with exchange coordinates                       */
 /* ================================================================== */
 
 const INDICES = [
-  // Americas
-  { sym: "^GSPC",      name: "S&P 500",             co: "United States",  fl: "\u{1F1FA}\u{1F1F8}", rg: "Americas",      desc: "Large cap benchmark covering approximately 80% of U.S. equity market capitalization." },
-  { sym: "^GSPTSE",    name: "S&P/TSX Composite",   co: "Canada",         fl: "\u{1F1E8}\u{1F1E6}", rg: "Americas",      desc: "Broad benchmark for the Canadian equity market." },
-  { sym: "^BVSP",      name: "Ibovespa",            co: "Brazil",         fl: "\u{1F1E7}\u{1F1F7}", rg: "Americas",      desc: "Main benchmark of Brazilian equities." },
-  { sym: "^MXX",       name: "S&P/BMV IPC",         co: "Mexico",         fl: "\u{1F1F2}\u{1F1FD}", rg: "Americas",      desc: "Flagship Mexican equity index." },
+  { sym: "^GSPC",      name: "S&P 500",             co: "United States",  fl: "\u{1F1FA}\u{1F1F8}", rg: "Americas",     desc: "Large cap benchmark covering approximately 80% of U.S. equity market capitalization.",             lat: 40.71,  lng: -74.01 },
+  { sym: "^GSPTSE",    name: "S&P/TSX Composite",   co: "Canada",         fl: "\u{1F1E8}\u{1F1E6}", rg: "Americas",     desc: "Broad benchmark for the Canadian equity market.",                                                   lat: 43.65,  lng: -79.38 },
+  { sym: "^BVSP",      name: "Ibovespa",            co: "Brazil",         fl: "\u{1F1E7}\u{1F1F7}", rg: "Americas",     desc: "Main benchmark of Brazilian equities.",                                                            lat: -23.55, lng: -46.63 },
+  { sym: "^MXX",       name: "S&P/BMV IPC",         co: "Mexico",         fl: "\u{1F1F2}\u{1F1FD}", rg: "Americas",     desc: "Flagship Mexican equity index.",                                                                   lat: 19.43,  lng: -99.13 },
 
-  // Europe
-  { sym: "^FTSE",      name: "FTSE 100",            co: "United Kingdom", fl: "\u{1F1EC}\u{1F1E7}", rg: "Europe",        desc: "Large cap index representing the largest companies listed in London." },
-  { sym: "^GDAXI",     name: "DAX",                 co: "Germany",        fl: "\u{1F1E9}\u{1F1EA}", rg: "Europe",        desc: "Tracks 40 major German blue chip companies." },
-  { sym: "^FCHI",      name: "CAC 40",              co: "France",         fl: "\u{1F1EB}\u{1F1F7}", rg: "Europe",        desc: "Leading benchmark of large French equities." },
-  { sym: "^SSMI",      name: "SMI",                 co: "Switzerland",    fl: "\u{1F1E8}\u{1F1ED}", rg: "Europe",        desc: "Swiss Market Index covering major Swiss blue chips." },
-  { sym: "^AEX",       name: "AEX",                 co: "Netherlands",    fl: "\u{1F1F3}\u{1F1F1}", rg: "Europe",        desc: "Tracks leading Dutch listed companies." },
-  { sym: "FTSEMIB.MI", name: "FTSE MIB",            co: "Italy",          fl: "\u{1F1EE}\u{1F1F9}", rg: "Europe",        desc: "Large cap Italian equity benchmark." },
-  { sym: "^IBEX",      name: "IBEX 35",             co: "Spain",          fl: "\u{1F1EA}\u{1F1F8}", rg: "Europe",        desc: "Principal Spanish stock market index." },
+  { sym: "^FTSE",      name: "FTSE 100",            co: "United Kingdom", fl: "\u{1F1EC}\u{1F1E7}", rg: "Europe",       desc: "Large cap index representing the largest companies listed in London.",                              lat: 51.51,  lng: -0.13  },
+  { sym: "^GDAXI",     name: "DAX",                 co: "Germany",        fl: "\u{1F1E9}\u{1F1EA}", rg: "Europe",       desc: "Tracks 40 major German blue chip companies.",                                                      lat: 50.11,  lng: 8.68   },
+  { sym: "^FCHI",      name: "CAC 40",              co: "France",         fl: "\u{1F1EB}\u{1F1F7}", rg: "Europe",       desc: "Leading benchmark of large French equities.",                                                      lat: 48.86,  lng: 2.35   },
+  { sym: "^SSMI",      name: "SMI",                 co: "Switzerland",    fl: "\u{1F1E8}\u{1F1ED}", rg: "Europe",       desc: "Swiss Market Index covering major Swiss blue chips.",                                               lat: 47.38,  lng: 8.54   },
+  { sym: "^AEX",       name: "AEX",                 co: "Netherlands",    fl: "\u{1F1F3}\u{1F1F1}", rg: "Europe",       desc: "Tracks leading Dutch listed companies.",                                                           lat: 52.37,  lng: 4.90   },
+  { sym: "FTSEMIB.MI", name: "FTSE MIB",            co: "Italy",          fl: "\u{1F1EE}\u{1F1F9}", rg: "Europe",       desc: "Large cap Italian equity benchmark.",                                                              lat: 45.46,  lng: 9.19   },
+  { sym: "^IBEX",      name: "IBEX 35",             co: "Spain",          fl: "\u{1F1EA}\u{1F1F8}", rg: "Europe",       desc: "Principal Spanish stock market index.",                                                            lat: 40.42,  lng: -3.70  },
 
-  // Asia Pacific
-  { sym: "^N225",      name: "Nikkei 225",          co: "Japan",          fl: "\u{1F1EF}\u{1F1F5}", rg: "Asia Pacific",  desc: "Price weighted index of major Japanese companies." },
-  { sym: "000300.SS",  name: "CSI 300",             co: "China",          fl: "\u{1F1E8}\u{1F1F3}", rg: "Asia Pacific",  desc: "Represents large and mid cap A-shares from Shanghai and Shenzhen." },
-  { sym: "^NSEI",      name: "NIFTY 50",            co: "India",          fl: "\u{1F1EE}\u{1F1F3}", rg: "Asia Pacific",  desc: "Tracks 50 major Indian companies listed on NSE." },
-  { sym: "^KS11",      name: "KOSPI",               co: "South Korea",    fl: "\u{1F1F0}\u{1F1F7}", rg: "Asia Pacific",  desc: "Primary benchmark of the Korean equity market." },
-  { sym: "^AXJO",      name: "S&P/ASX 200",         co: "Australia",      fl: "\u{1F1E6}\u{1F1FA}", rg: "Asia Pacific",  desc: "Covers the 200 largest companies listed in Australia." },
-  { sym: "^HSI",       name: "Hang Seng Index",     co: "Hong Kong",      fl: "\u{1F1ED}\u{1F1F0}", rg: "Asia Pacific",  desc: "Tracks major companies listed in Hong Kong." },
-  { sym: "^STI",       name: "Straits Times Index",  co: "Singapore",     fl: "\u{1F1F8}\u{1F1EC}", rg: "Asia Pacific",  desc: "Benchmark for Singapore\u2019s leading listed firms." },
+  { sym: "^N225",      name: "Nikkei 225",          co: "Japan",          fl: "\u{1F1EF}\u{1F1F5}", rg: "Asia Pacific", desc: "Price weighted index of major Japanese companies.",                                                lat: 35.68,  lng: 139.69 },
+  { sym: "000300.SS",  name: "CSI 300",             co: "China",          fl: "\u{1F1E8}\u{1F1F3}", rg: "Asia Pacific", desc: "Represents large and mid cap A-shares from Shanghai and Shenzhen.",                                lat: 31.23,  lng: 121.47 },
+  { sym: "^NSEI",      name: "NIFTY 50",            co: "India",          fl: "\u{1F1EE}\u{1F1F3}", rg: "Asia Pacific", desc: "Tracks 50 major Indian companies listed on NSE.",                                                  lat: 19.08,  lng: 72.88  },
+  { sym: "^KS11",      name: "KOSPI",               co: "South Korea",    fl: "\u{1F1F0}\u{1F1F7}", rg: "Asia Pacific", desc: "Primary benchmark of the Korean equity market.",                                                   lat: 37.57,  lng: 126.98 },
+  { sym: "^AXJO",      name: "S&P/ASX 200",         co: "Australia",      fl: "\u{1F1E6}\u{1F1FA}", rg: "Asia Pacific", desc: "Covers the 200 largest companies listed in Australia.",                                            lat: -33.87, lng: 151.21 },
+  { sym: "^HSI",       name: "Hang Seng Index",     co: "Hong Kong",      fl: "\u{1F1ED}\u{1F1F0}", rg: "Asia Pacific", desc: "Tracks major companies listed in Hong Kong.",                                                      lat: 22.32,  lng: 114.17 },
+  { sym: "^STI",       name: "Straits Times Index",  co: "Singapore",     fl: "\u{1F1F8}\u{1F1EC}", rg: "Asia Pacific", desc: "Benchmark for Singapore\u2019s leading listed firms.",                                              lat: 1.35,   lng: 103.82 },
 
-  // Africa
-  { sym: "^J200.JO",   name: "FTSE/JSE Top 40",     co: "South Africa",  fl: "\u{1F1FF}\u{1F1E6}", rg: "Africa",        desc: "Large cap benchmark for South Africa." },
+  { sym: "^J200.JO",   name: "FTSE/JSE Top 40",     co: "South Africa",  fl: "\u{1F1FF}\u{1F1E6}", rg: "Africa",       desc: "Large cap benchmark for South Africa.",                                                            lat: -26.20, lng: 28.04  },
 ];
-
-const REGIONS = ["Americas", "Europe", "Asia Pacific", "Africa"];
 
 const CORS_PROXIES = [
   (u) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
@@ -47,6 +41,9 @@ const YAHOO_CHART_BASE = "https://query1.finance.yahoo.com/v8/finance/chart/";
 let cache = {};
 let latestResults = [];
 let autoRefreshTimer = null;
+const markerMap = {};
+let map;
+let loadedCount = 0;
 
 /* ================================================================== */
 /*  Networking                                                        */
@@ -89,7 +86,6 @@ async function fetchIndex(index) {
   const dayLow = closes.length ? Math.min(...closes) : price;
   const currency = meta.currency || "";
 
-  // Use the actual regular trading period from the API for open/closed
   const tradingPeriod = meta.currentTradingPeriod?.regular;
   let marketOpen = false;
   if (tradingPeriod) {
@@ -135,24 +131,15 @@ function formatPercent(n) {
   return (n >= 0 ? "+" : "") + n.toFixed(2) + "%";
 }
 
-function timeAgo(unixTs) {
-  if (!unixTs) return "";
-  const seconds = Math.floor(Date.now() / 1000 - unixTs);
-  if (seconds < 60) return "just now";
-  if (seconds < 3600) return Math.floor(seconds / 60) + "m ago";
-  if (seconds < 86400) return Math.floor(seconds / 3600) + "h ago";
-  return Math.floor(seconds / 86400) + "d ago";
-}
-
 /* ================================================================== */
-/*  Sparkline SVG builder                                             */
+/*  Sparkline SVG builder (wider for popups)                          */
 /* ================================================================== */
 
 function buildSparkline(closes, isPositive) {
   if (!closes || closes.length < 2) return "";
 
-  const W = 90;
-  const H = 36;
+  const W = 260;
+  const H = 40;
   const PAD = 2;
   const lo = Math.min(...closes);
   const hi = Math.max(...closes);
@@ -176,7 +163,7 @@ function buildSparkline(closes, isPositive) {
     <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
       <defs>
         <linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%"   stop-color="${color}" stop-opacity=".25"/>
+          <stop offset="0%"   stop-color="${color}" stop-opacity=".3"/>
           <stop offset="100%" stop-color="${color}" stop-opacity="0"/>
         </linearGradient>
       </defs>
@@ -187,157 +174,152 @@ function buildSparkline(closes, isPositive) {
 }
 
 /* ================================================================== */
-/*  Day range bar                                                     */
+/*  Popup HTML builder                                                */
 /* ================================================================== */
 
-function buildRangeBar(data) {
-  const { dayLow, dayHigh, price } = data;
-  if (!dayLow || !dayHigh || dayLow === dayHigh) return "";
-
-  const pct = ((price - dayLow) / (dayHigh - dayLow)) * 100;
-  const clampedPct = Math.max(0, Math.min(100, pct));
+function buildPopupHTML(data) {
+  const positive = data.change >= 0;
+  const arrow = positive ? "\u25B2" : "\u25BC";
+  const chgClass = positive ? "pos" : "neg";
+  const statusHTML = data.marketOpen
+    ? '<span class="popup-open">\u25CF Open</span>'
+    : '<span class="popup-closed">\u25CF Closed</span>';
 
   return `
-    <div class="range-bar-wrap">
-      <div class="range-bar-labels">
-        <span class="detail-label">Day Range</span>
-        <span class="detail-value" style="font-size:.72rem">${formatPrice(dayLow)} \u2013 ${formatPrice(dayHigh)}</span>
+    <div class="popup-card">
+      <div class="popup-hdr">
+        <span>${data.fl} ${data.co}</span>
+        ${statusHTML}
       </div>
-      <div class="range-bar-track">
-        <div class="range-bar-fill" style="width:${clampedPct}%"></div>
-        <div class="range-bar-marker" style="left:${clampedPct}%"></div>
+      <div class="popup-name">${data.name}</div>
+      <div class="popup-price">${formatPrice(data.price)}</div>
+      <div class="popup-chg ${chgClass}">
+        ${arrow} ${formatChange(data.change)}
+        <span class="popup-badge">${formatPercent(data.changePercent)}</span>
       </div>
+      <div class="popup-spark">${buildSparkline(data.closes, positive)}</div>
+      <div class="popup-details">
+        <span>
+          <span class="popup-detail-label">Prev Close</span>
+          <span class="popup-detail-val">${formatPrice(data.previousClose)}</span>
+        </span>
+        <span>
+          <span class="popup-detail-label">Day Range</span>
+          <span class="popup-detail-val">${formatPrice(data.dayLow)} \u2013 ${formatPrice(data.dayHigh)}</span>
+        </span>
+      </div>
+      <div class="popup-desc">${data.desc}</div>
     </div>`;
 }
 
 /* ================================================================== */
-/*  Card rendering                                                    */
+/*  Map & marker management                                           */
 /* ================================================================== */
 
-function createCard(data) {
-  const el = document.createElement("div");
-  el.className = "card";
-  el.dataset.sym = data.sym;
+function initMap() {
+  map = L.map("map", {
+    center: [25, 15],
+    zoom: 2.5,
+    minZoom: 2,
+    maxZoom: 8,
+    zoomControl: false,
+    attributionControl: false,
+    worldCopyJump: true,
+  });
 
-  const headerHTML = `
-    <div class="card-hdr">
-      <div>
-        <div class="card-country"><span class="fl">${data.fl}</span>${data.co}</div>
-        <div class="card-name">${data.name}</div>
-      </div>
-    </div>`;
+  L.tileLayer(
+    "https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png",
+    { maxZoom: 19, subdomains: "abcd" }
+  ).addTo(map);
 
-  if (!data.ok && !data.err) {
-    el.innerHTML = `
-      ${headerHTML}
-      <div class="sk sk-price"></div>
-      <div class="sk sk-chg"></div>
-      <div class="sk sk-details"></div>
-      <div class="sk sk-desc"></div>`;
-    return el;
-  }
+  L.control.zoom({ position: "topright" }).addTo(map);
+}
+
+function placeLoadingMarkers() {
+  INDICES.forEach((idx) => {
+    const marker = L.circleMarker([idx.lat, idx.lng], {
+      radius: 6,
+      fillColor: "#525c74",
+      fillOpacity: 0.6,
+      color: "#525c74",
+      weight: 3,
+      opacity: 0.25,
+    }).addTo(map);
+
+    marker.bindTooltip(
+      `<span class="tt-name">${idx.name}</span> <span class="tt-pct" style="color:var(--text-muted)">loading\u2026</span>`,
+      { className: "idx-tooltip", direction: "top", offset: [0, -8] }
+    );
+
+    markerMap[idx.sym] = marker;
+  });
+}
+
+function updateMarker(data) {
+  const marker = markerMap[data.sym];
+  if (!marker) return;
 
   if (data.err) {
-    el.innerHTML = `
-      ${headerHTML}
-      <div class="card-err">
-        <span>Unable to load data</span>
-        <button class="btn-retry" onclick="retrySingle('${data.sym}')">Retry</button>
-      </div>
-      <div class="card-desc">${data.desc}</div>`;
-    return el;
+    marker.setStyle({
+      fillColor: "#ef4444",
+      color: "#ef4444",
+      fillOpacity: 0.4,
+      opacity: 0.2,
+    });
+    marker.unbindTooltip();
+    marker.bindTooltip(
+      `<span class="tt-name">${data.name}</span> <span class="tt-pct down">failed</span>`,
+      { className: "idx-tooltip", direction: "top", offset: [0, -8] }
+    );
+    return;
   }
 
   const positive = data.change >= 0;
-  const arrow = positive ? "&#9650;" : "&#9660;";
+  const color = positive ? "#22c55e" : "#ef4444";
 
-  el.classList.add(positive ? "pos" : "neg");
-  el.innerHTML = `
-    <div class="card-hdr">
-      <div>
-        <div class="card-country"><span class="fl">${data.fl}</span>${data.co}</div>
-        <div class="card-name">${data.name}</div>
-      </div>
-      <div class="card-meta">
-        <div class="mkt-status">
-          <span class="s-dot ${data.marketOpen ? "on" : ""}"></span>${data.marketOpen ? "Open" : "Closed"}
-        </div>
-        ${data.currency ? `<div class="card-currency">${data.currency}</div>` : ""}
-      </div>
-    </div>
-    <div class="card-mid">
-      <div class="card-price">${formatPrice(data.price)}</div>
-      <div class="spark">${buildSparkline(data.closes, positive)}</div>
-    </div>
-    <div class="card-chg ${positive ? "pos" : "neg"}">
-      <span>${arrow} ${formatChange(data.change)}</span>
-      <span class="chg-badge">${formatPercent(data.changePercent)}</span>
-    </div>
-    <div class="card-details">
-      <div class="detail-item">
-        <span class="detail-label">Prev Close</span>
-        <span class="detail-value">${formatPrice(data.previousClose)}</span>
-      </div>
-      <div class="detail-item">
-        <span class="detail-label">Open</span>
-        <span class="detail-value">${data.closes.length ? formatPrice(data.closes[0]) : "\u2014"}</span>
-      </div>
-      ${buildRangeBar(data)}
-    </div>
-    <div class="card-foot">
-      <div class="card-desc">${data.desc}</div>
-      <div class="card-ago">${timeAgo(data.marketTime)}</div>
-    </div>`;
-  return el;
-}
+  marker.setStyle({
+    fillColor: color,
+    color: color,
+    fillOpacity: 0.85,
+    opacity: 0.35,
+    weight: 4,
+  });
+  marker.setRadius(7);
 
-/* ================================================================== */
-/*  Page rendering                                                    */
-/* ================================================================== */
-
-function renderSkeletonLayout() {
-  const main = document.getElementById("main");
-  main.innerHTML = "";
-
-  for (const region of REGIONS) {
-    const items = INDICES.filter((d) => d.rg === region);
-    if (!items.length) continue;
-
-    const section = document.createElement("section");
-    section.className = "region";
-    section.innerHTML = `<h2 class="region-title">${region}</h2>`;
-
-    const grid = document.createElement("div");
-    grid.className = "grid";
-    items.forEach((d) => {
-      const card = createCard({ ...d, ok: false, err: false });
-      card.classList.add("visible");
-      grid.appendChild(card);
-    });
-
-    section.appendChild(grid);
-    main.appendChild(section);
-  }
-}
-
-function replaceCard(data) {
-  const existing = document.querySelector(
-    `[data-sym="${CSS.escape(data.sym)}"]`
+  marker.unbindTooltip();
+  marker.bindTooltip(
+    `<span class="tt-name">${data.name}</span> <span class="tt-pct ${positive ? "up" : "down"}">${formatPercent(data.changePercent)}</span>`,
+    { className: "idx-tooltip", direction: "top", offset: [0, -8] }
   );
-  if (!existing) return;
 
-  const newCard = createCard(data);
-  existing.replaceWith(newCard);
-  requestAnimationFrame(() => newCard.classList.add("visible"));
+  marker.unbindPopup();
+  marker.bindPopup(buildPopupHTML(data), {
+    className: "idx-popup",
+    maxWidth: 340,
+    minWidth: 280,
+  });
+
+  // Hover effect
+  marker.off("mouseover mouseout");
+  marker.on("mouseover", function () {
+    this.setRadius(10);
+    this.setStyle({ fillOpacity: 1, opacity: 0.5, weight: 5 });
+  });
+  marker.on("mouseout", function () {
+    this.setRadius(7);
+    this.setStyle({ fillOpacity: 0.85, opacity: 0.35, weight: 4 });
+  });
 }
 
-function renderSummary(list) {
-  const loaded = list.filter((d) => d.ok);
-  if (!loaded.length) return;
+/* ================================================================== */
+/*  Summary panel                                                     */
+/* ================================================================== */
 
+function renderSummary(list, total) {
+  const loaded = list.filter((d) => d.ok);
+  const failed = list.filter((d) => d.err);
   const up = loaded.filter((d) => d.change > 0).length;
   const down = loaded.filter((d) => d.change < 0).length;
-  const flat = loaded.filter((d) => d.change === 0).length;
 
   let best = null;
   let worst = null;
@@ -346,89 +328,85 @@ function renderSummary(list) {
     if (!worst || d.changePercent < worst.changePercent) worst = d;
   });
 
-  const el = document.getElementById("summary");
-  let html =
-    `<div class="summary-chip up"><span class="chip-dot"></span>${up} advancing</div>` +
-    `<div class="summary-chip down"><span class="chip-dot"></span>${down} declining</div>`;
+  const doneCount = loaded.length + failed.length;
+  const loading = doneCount < total;
 
-  if (flat) {
-    html += `<div class="summary-chip flat"><span class="chip-dot"></span>${flat} unchanged</div>`;
-  }
+  let html = `
+    <div class="panel-row"><span class="panel-dot up"></span><span class="panel-label">Advancing</span><span class="panel-val">${up}</span></div>
+    <div class="panel-row"><span class="panel-dot down"></span><span class="panel-label">Declining</span><span class="panel-val">${down}</span></div>`;
 
   if (best && worst && loaded.length > 1) {
-    html += `<span class="summary-divider"></span>`;
-    html += `<span class="summary-performer">Best <strong>${best.name}</strong> <span class="perf-val up">${formatPercent(best.changePercent)}</span></span>`;
-    html += `<span class="summary-divider"></span>`;
-    html += `<span class="summary-performer">Worst <strong>${worst.name}</strong> <span class="perf-val down">${formatPercent(worst.changePercent)}</span></span>`;
+    html += `<div class="panel-divider"></div>`;
+    html += `<div class="panel-perf">Best: <strong>${best.name}</strong> <span class="up">${formatPercent(best.changePercent)}</span></div>`;
+    html += `<div class="panel-perf">Worst: <strong>${worst.name}</strong> <span class="down">${formatPercent(worst.changePercent)}</span></div>`;
   }
 
-  el.innerHTML = html;
+  if (loading) {
+    html += `<div class="panel-progress">Loading ${doneCount}/${total}\u2026</div>`;
+  }
+
+  document.getElementById("summaryPanel").innerHTML = html;
 }
 
 /* ================================================================== */
-/*  Data loading — streams each card as it arrives                    */
+/*  Data loading — streams each marker as it arrives                  */
 /* ================================================================== */
 
 async function refresh() {
   const btn = document.getElementById("btnRef");
   btn.classList.add("spin");
-  document.getElementById("errBanner").classList.remove("show");
-  document.getElementById("summary").innerHTML = "";
+
+  // Reset markers to loading state
+  INDICES.forEach((idx) => {
+    const m = markerMap[idx.sym];
+    if (m) {
+      m.setStyle({
+        fillColor: "#525c74",
+        color: "#525c74",
+        fillOpacity: 0.6,
+        opacity: 0.25,
+        weight: 3,
+      });
+      m.setRadius(6);
+      m.unbindPopup();
+      m.unbindTooltip();
+      m.bindTooltip(
+        `<span class="tt-name">${idx.name}</span> <span class="tt-pct" style="color:var(--text-muted)">loading\u2026</span>`,
+        { className: "idx-tooltip", direction: "top", offset: [0, -8] }
+      );
+      m.off("mouseover mouseout");
+    }
+  });
 
   latestResults = INDICES.map((i) => ({ ...i, ok: false, err: false }));
-  renderSkeletonLayout();
-
-  let failCount = 0;
+  loadedCount = 0;
+  renderSummary(latestResults, INDICES.length);
 
   const promises = INDICES.map(async (idx, i) => {
     try {
       const result = await fetchIndex(idx);
       cache[idx.sym] = result;
       latestResults[i] = result;
-      replaceCard(result);
-      renderSummary(latestResults);
+      updateMarker(result);
+      renderSummary(latestResults, INDICES.length);
     } catch {
-      failCount++;
       const errData = { ...idx, ok: false, err: true };
       latestResults[i] = errData;
-      replaceCard(errData);
+      updateMarker(errData);
+      renderSummary(latestResults, INDICES.length);
     }
   });
 
   await Promise.all(promises);
 
-  renderSummary(latestResults);
-
-  if (failCount) {
-    const banner = document.getElementById("errBanner");
-    banner.classList.add("show");
-    document.getElementById("errMsg").textContent =
-      `${failCount} ${failCount === 1 ? "index" : "indices"} failed to load. Data may be incomplete.`;
-  }
-
+  renderSummary(latestResults, INDICES.length);
   document.getElementById("ts").textContent =
     "Updated " + new Date().toLocaleTimeString();
   btn.classList.remove("spin");
 }
 
-async function retrySingle(sym) {
-  const idx = INDICES.find((i) => i.sym === sym);
-  if (!idx) return;
-
-  try {
-    const result = await fetchIndex(idx);
-    cache[sym] = result;
-    const i = latestResults.findIndex((r) => r.sym === sym);
-    if (i !== -1) latestResults[i] = result;
-    replaceCard(result);
-    renderSummary(latestResults);
-  } catch {
-    /* still broken */
-  }
-}
-
 /* ================================================================== */
-/*  Event listeners & bootstrap                                       */
+/*  Bootstrap                                                         */
 /* ================================================================== */
 
 document.getElementById("headerDate").textContent =
@@ -446,4 +424,6 @@ document.getElementById("arToggle").addEventListener("change", function () {
 
 document.getElementById("btnRef").addEventListener("click", refresh);
 
+initMap();
+placeLoadingMarkers();
 refresh();
