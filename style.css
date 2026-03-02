@@ -211,11 +211,18 @@ body {
   border-radius: 50%;
 }
 
-.panel-dot.up { background: var(--pos); }
+.panel-dot.up   { background: var(--pos); }
 .panel-dot.down { background: var(--neg); }
+.panel-dot.flat { background: var(--text-muted); }
+.panel-dot.nyo  { background: #3a3f52; border: 1px solid var(--text-muted); }
 
 .panel-label {
   color: var(--text-sec);
+}
+
+.panel-row.muted .panel-label,
+.panel-row.muted .panel-val {
+  color: var(--text-muted);
 }
 
 .panel-val {
@@ -224,11 +231,39 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+.panel-heading {
+  font-size: 0.62rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin-bottom: 0.35rem;
+}
+
 .panel-divider {
   height: 1px;
   background: var(--border);
   margin: 0.5rem 0;
 }
+
+.panel-metric {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.76rem;
+}
+
+.panel-metric-label {
+  color: var(--text-sec);
+}
+
+.panel-metric-val {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.panel-metric-val.up   { color: var(--pos); }
+.panel-metric-val.down { color: var(--neg); }
 
 .panel-perf {
   color: var(--text-muted);
@@ -239,7 +274,7 @@ body {
   color: var(--text-sec);
 }
 
-.panel-perf .up { color: var(--pos); font-weight: 700; }
+.panel-perf .up   { color: var(--pos); font-weight: 700; }
 .panel-perf .down { color: var(--neg); font-weight: 700; }
 
 .panel-progress {
@@ -275,8 +310,18 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-.idx-tooltip .tt-pct.up { color: var(--pos); }
+.idx-tooltip .tt-pct.up   { color: var(--pos); }
 .idx-tooltip .tt-pct.down { color: var(--neg); }
+
+.idx-tooltip .tt-status {
+  font-size: 0.62rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-left: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.7;
+}
 
 .idx-tooltip::before {
   border-top-color: var(--border) !important;
@@ -431,6 +476,33 @@ body {
   font-size: 0.68rem;
   color: var(--text-muted);
   line-height: 1.45;
+}
+
+/* Not-yet-open popup */
+
+.popup-nyo .popup-hdr {
+  margin-bottom: 0.1rem;
+}
+
+.popup-nyo-badge {
+  color: var(--text-muted);
+  font-size: 0.66rem;
+  font-weight: 600;
+  padding: 0.1rem 0.4rem;
+  background: rgba(82, 92, 116, 0.3);
+  border-radius: 4px;
+}
+
+.popup-nyo .popup-name {
+  margin-bottom: 0.45rem;
+}
+
+.popup-nyo-msg {
+  color: var(--text-sec);
+  font-size: 0.76rem;
+  margin-bottom: 0.6rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border);
 }
 
 /* ------------------------------------------------------------------ */

@@ -86,11 +86,19 @@ async function fetchIndex(index) {
   const dayLow = closes.length ? Math.min(...closes) : price;
   const currency = meta.currency || "";
 
+  // Three-way session state:
+  //   "open"         — currently in regular trading hours
+  //   "closed-today" — traded in this session, now closed
+  //   "not-yet-open" — hasn't started today's session yet
   const tradingPeriod = meta.currentTradingPeriod?.regular;
-  let marketOpen = false;
+  let session = "not-yet-open";
   if (tradingPeriod) {
     const now = Math.floor(Date.now() / 1000);
-    marketOpen = now >= tradingPeriod.start && now <= tradingPeriod.end;
+    if (now >= tradingPeriod.start && now <= tradingPeriod.end) {
+      session = "open";
+    } else if (meta.regularMarketTime >= tradingPeriod.start) {
+      session = "closed-today";
+    }
   }
 
   return {
@@ -104,7 +112,7 @@ async function fetchIndex(index) {
     dayLow,
     currency,
     marketTime: meta.regularMarketTime,
-    marketOpen,
+    session,
     ok: true,
   };
 }
@@ -177,12 +185,25 @@ function buildSparkline(closes, isPositive) {
 /*  Popup HTML builder                                                */
 /* ================================================================== */
 
+function buildPopupNotYetOpen(data) {
+  return `
+    <div class="popup-card popup-nyo">
+      <div class="popup-hdr">
+        <span>${data.fl} ${data.co}</span>
+        <span class="popup-nyo-badge">Not yet open</span>
+      </div>
+      <div class="popup-name">${data.name}</div>
+      <div class="popup-nyo-msg">This market has not opened for today\u2019s session yet.</div>
+      <div class="popup-desc">${data.desc}</div>
+    </div>`;
+}
+
 function buildPopupHTML(data) {
   const positive = data.change >= 0;
   const arrow = positive ? "\u25B2" : "\u25BC";
   const chgClass = positive ? "pos" : "neg";
-  const statusHTML = data.marketOpen
-    ? '<span class="popup-open">\u25CF Open</span>'
+  const statusHTML = data.session === "open"
+    ? '<span class="popup-open">\u25CF Live</span>'
     : '<span class="popup-closed">\u25CF Closed</span>';
 
   return `
@@ -259,14 +280,12 @@ function updateMarker(data) {
   const marker = markerMap[data.sym];
   if (!marker) return;
 
+  marker.unbindTooltip();
+  marker.unbindPopup();
+  marker.off("mouseover mouseout");
+
   if (data.err) {
-    marker.setStyle({
-      fillColor: "#ef4444",
-      color: "#ef4444",
-      fillOpacity: 0.4,
-      opacity: 0.2,
-    });
-    marker.unbindTooltip();
+    marker.setStyle({ fillColor: "#ef4444", color: "#ef4444", fillOpacity: 0.4, opacity: 0.2 });
     marker.bindTooltip(
       `<span class="tt-name">${data.name}</span> <span class="tt-pct down">failed</span>`,
       { className: "idx-tooltip", direction: "top", offset: [0, -8] }
@@ -274,41 +293,45 @@ function updateMarker(data) {
     return;
   }
 
+  const session = data.session;
+
+  // Not yet open — gray, dim, no performance data
+  if (session === "not-yet-open") {
+    marker.setStyle({ fillColor: "#3a3f52", color: "#3a3f52", fillOpacity: 0.45, opacity: 0.15, weight: 2 });
+    marker.setRadius(5);
+    marker.bindTooltip(
+      `<span class="tt-name">${data.name}</span> <span class="tt-pct" style="color:var(--text-muted)">not yet open</span>`,
+      { className: "idx-tooltip", direction: "top", offset: [0, -6] }
+    );
+    marker.bindPopup(buildPopupNotYetOpen(data), { className: "idx-popup", maxWidth: 300, minWidth: 240 });
+    marker.on("mouseover", function () { this.setRadius(7); this.setStyle({ fillOpacity: 0.6 }); });
+    marker.on("mouseout",  function () { this.setRadius(5); this.setStyle({ fillOpacity: 0.45 }); });
+    return;
+  }
+
+  // Active market (open or closed-today) — color by performance
   const positive = data.change >= 0;
   const color = positive ? "#22c55e" : "#ef4444";
+  const isOpen = session === "open";
 
-  marker.setStyle({
-    fillColor: color,
-    color: color,
-    fillOpacity: 0.85,
-    opacity: 0.35,
-    weight: 4,
-  });
-  marker.setRadius(7);
+  const baseRadius   = isOpen ? 9 : 7;
+  const baseFill     = isOpen ? 0.9 : 0.75;
+  const baseWeight   = isOpen ? 6 : 3;
+  const baseOpacity  = isOpen ? 0.3 : 0.2;
 
-  marker.unbindTooltip();
+  marker.setStyle({ fillColor: color, color: color, fillOpacity: baseFill, opacity: baseOpacity, weight: baseWeight });
+  marker.setRadius(baseRadius);
+
+  const statusLabel = isOpen ? "live" : "closed";
   marker.bindTooltip(
-    `<span class="tt-name">${data.name}</span> <span class="tt-pct ${positive ? "up" : "down"}">${formatPercent(data.changePercent)}</span>`,
+    `<span class="tt-name">${data.name}</span> <span class="tt-pct ${positive ? "up" : "down"}">${formatPercent(data.changePercent)}</span> <span class="tt-status">${statusLabel}</span>`,
     { className: "idx-tooltip", direction: "top", offset: [0, -8] }
   );
 
-  marker.unbindPopup();
-  marker.bindPopup(buildPopupHTML(data), {
-    className: "idx-popup",
-    maxWidth: 340,
-    minWidth: 280,
-  });
+  marker.bindPopup(buildPopupHTML(data), { className: "idx-popup", maxWidth: 340, minWidth: 280 });
 
-  // Hover effect
-  marker.off("mouseover mouseout");
-  marker.on("mouseover", function () {
-    this.setRadius(10);
-    this.setStyle({ fillOpacity: 1, opacity: 0.5, weight: 5 });
-  });
-  marker.on("mouseout", function () {
-    this.setRadius(7);
-    this.setStyle({ fillOpacity: 0.85, opacity: 0.35, weight: 4 });
-  });
+  marker.on("mouseover", function () { this.setRadius(baseRadius + 3); this.setStyle({ fillOpacity: 1, opacity: 0.5, weight: baseWeight + 2 }); });
+  marker.on("mouseout",  function () { this.setRadius(baseRadius); this.setStyle({ fillOpacity: baseFill, opacity: baseOpacity, weight: baseWeight }); });
 }
 
 /* ================================================================== */
@@ -318,27 +341,57 @@ function updateMarker(data) {
 function renderSummary(list, total) {
   const loaded = list.filter((d) => d.ok);
   const failed = list.filter((d) => d.err);
-  const up = loaded.filter((d) => d.change > 0).length;
-  const down = loaded.filter((d) => d.change < 0).length;
+  const doneCount = loaded.length + failed.length;
+  const loading = doneCount < total;
+
+  // Only indices that have traded today count as "active"
+  const active = loaded.filter((d) => d.session === "open" || d.session === "closed-today");
+  const notYet = loaded.filter((d) => d.session === "not-yet-open");
+
+  const up   = active.filter((d) => d.change > 0).length;
+  const down = active.filter((d) => d.change < 0).length;
+  const flat = active.filter((d) => d.change === 0).length;
 
   let best = null;
   let worst = null;
-  loaded.forEach((d) => {
+  let sumPct = 0;
+  active.forEach((d) => {
+    sumPct += d.changePercent;
     if (!best || d.changePercent > best.changePercent) best = d;
     if (!worst || d.changePercent < worst.changePercent) worst = d;
   });
 
-  const doneCount = loaded.length + failed.length;
-  const loading = doneCount < total;
+  const avgPct = active.length ? sumPct / active.length : 0;
 
-  let html = `
-    <div class="panel-row"><span class="panel-dot up"></span><span class="panel-label">Advancing</span><span class="panel-val">${up}</span></div>
-    <div class="panel-row"><span class="panel-dot down"></span><span class="panel-label">Declining</span><span class="panel-val">${down}</span></div>`;
+  let sentiment = "Neutral";
+  if (active.length > 0) {
+    const ratio = up / active.length;
+    if (ratio >= 0.65)      sentiment = "Bullish";
+    else if (ratio >= 0.5)  sentiment = "Mildly bullish";
+    else if (ratio > 0.35)  sentiment = "Mildly bearish";
+    else                     sentiment = "Bearish";
+  }
 
-  if (best && worst && loaded.length > 1) {
+  const sentimentClass = avgPct >= 0 ? "up" : "down";
+
+  let html = `<div class="panel-heading">Today\u2019s Markets</div>`;
+  html += `<div class="panel-row"><span class="panel-dot up"></span><span class="panel-label">Advancing</span><span class="panel-val">${up}</span></div>`;
+  html += `<div class="panel-row"><span class="panel-dot down"></span><span class="panel-label">Declining</span><span class="panel-val">${down}</span></div>`;
+  if (flat) html += `<div class="panel-row"><span class="panel-dot flat"></span><span class="panel-label">Unchanged</span><span class="panel-val">${flat}</span></div>`;
+  if (notYet.length) {
+    html += `<div class="panel-row muted"><span class="panel-dot nyo"></span><span class="panel-label">Not yet open</span><span class="panel-val">${notYet.length}</span></div>`;
+  }
+
+  if (active.length > 0) {
     html += `<div class="panel-divider"></div>`;
-    html += `<div class="panel-perf">Best: <strong>${best.name}</strong> <span class="up">${formatPercent(best.changePercent)}</span></div>`;
-    html += `<div class="panel-perf">Worst: <strong>${worst.name}</strong> <span class="down">${formatPercent(worst.changePercent)}</span></div>`;
+    html += `<div class="panel-metric"><span class="panel-metric-label">Avg Change</span><span class="panel-metric-val ${sentimentClass}">${formatPercent(avgPct)}</span></div>`;
+    html += `<div class="panel-metric"><span class="panel-metric-label">Sentiment</span><span class="panel-metric-val ${sentimentClass}">${sentiment}</span></div>`;
+  }
+
+  if (best && worst && active.length > 1) {
+    html += `<div class="panel-divider"></div>`;
+    html += `<div class="panel-perf">Best <strong>${best.name}</strong> <span class="up">${formatPercent(best.changePercent)}</span></div>`;
+    html += `<div class="panel-perf">Worst <strong>${worst.name}</strong> <span class="down">${formatPercent(worst.changePercent)}</span></div>`;
   }
 
   if (loading) {
