@@ -338,15 +338,29 @@ function updateMarker(data) {
 
   // Active market (open or closed-today) — color by performance
   const positive = data.change >= 0;
-  const color = positive ? "#22c55e" : "#ef4444";
   const isOpen = session === "open";
 
-  const baseRadius   = isOpen ? 9 : 7;
-  const baseFill     = isOpen ? 0.9 : 0.75;
-  const baseWeight   = isOpen ? 6 : 3;
-  const baseOpacity  = isOpen ? 0.3 : 0.2;
+  let baseRadius, baseFill, baseWeight, baseOpacity, fillColor, strokeColor;
 
-  marker.setStyle({ fillColor: color, color: color, fillOpacity: baseFill, opacity: baseOpacity, weight: baseWeight });
+  if (isOpen) {
+    // Live: bright solid dot with soft glow
+    fillColor   = positive ? "#4ade80" : "#f87171";
+    strokeColor = fillColor;
+    baseRadius  = 9;
+    baseFill    = 0.92;
+    baseWeight  = 6;
+    baseOpacity = 0.35;
+  } else {
+    // Closed today: hollow ring, muted fill, prominent stroke
+    fillColor   = positive ? "#0a2618" : "#2a0f0f";
+    strokeColor = positive ? "#15803d" : "#991b1b";
+    baseRadius  = 7;
+    baseFill    = 0.5;
+    baseWeight  = 2.5;
+    baseOpacity = 0.9;
+  }
+
+  marker.setStyle({ fillColor, color: strokeColor, fillOpacity: baseFill, opacity: baseOpacity, weight: baseWeight });
   marker.setRadius(baseRadius);
 
   const statusLabel = isOpen ? "live" : "closed";
@@ -357,7 +371,7 @@ function updateMarker(data) {
 
   marker.bindPopup(buildPopupHTML(data), { className: "idx-popup", maxWidth: 340, minWidth: 280 });
 
-  marker.on("mouseover", function () { this.setRadius(baseRadius + 3); this.setStyle({ fillOpacity: 1, opacity: 0.5, weight: baseWeight + 2 }); });
+  marker.on("mouseover", function () { this.setRadius(baseRadius + 3); this.setStyle({ fillOpacity: Math.min(baseFill + 0.2, 1), opacity: Math.min(baseOpacity + 0.2, 1), weight: baseWeight + 2 }); });
   marker.on("mouseout",  function () { this.setRadius(baseRadius); this.setStyle({ fillOpacity: baseFill, opacity: baseOpacity, weight: baseWeight }); });
 }
 
@@ -375,12 +389,16 @@ function renderSummary(list, total) {
   const active = loaded.filter((d) => d.session === "open" || d.session === "closed-today");
   const notYet = loaded.filter((d) => d.session === "not-yet-open");
 
-  const liveCount   = active.filter((d) => d.session === "open").length;
-  const closedCount = active.filter((d) => d.session === "closed-today").length;
+  const liveList   = active.filter((d) => d.session === "open");
+  const closedList = active.filter((d) => d.session === "closed-today");
 
   const up   = active.filter((d) => d.change > 0).length;
   const down = active.filter((d) => d.change < 0).length;
   const flat = active.filter((d) => d.change === 0).length;
+
+  const closedAvg = closedList.length
+    ? closedList.reduce((s, d) => s + d.changePercent, 0) / closedList.length
+    : 0;
 
   let best = null;
   let worst = null;
@@ -409,11 +427,10 @@ function renderSummary(list, total) {
   html += `<div class="panel-row"><span class="panel-dot down"></span><span class="panel-label">Declining</span><span class="panel-val">${down}</span></div>`;
   if (flat) html += `<div class="panel-row"><span class="panel-dot flat"></span><span class="panel-label">Unchanged</span><span class="panel-val">${flat}</span></div>`;
   html += `<div class="panel-divider"></div>`;
-  if (liveCount)   html += `<div class="panel-row"><span class="panel-dot live"></span><span class="panel-label">Live</span><span class="panel-val">${liveCount}</span></div>`;
-  if (closedCount) html += `<div class="panel-row"><span class="panel-dot closed"></span><span class="panel-label">Closed today</span><span class="panel-val">${closedCount}</span></div>`;
-  if (notYet.length) {
-    html += `<div class="panel-row muted"><span class="panel-dot nyo"></span><span class="panel-label">Not yet open</span><span class="panel-val">${notYet.length}</span></div>`;
-  }
+  const closedDotClass = closedList.length ? (closedAvg >= 0 ? "up" : "down") : "closed";
+  html += `<div class="panel-row"><span class="panel-dot live"></span><span class="panel-label">Live</span><span class="panel-val">${liveList.length}</span></div>`;
+  html += `<div class="panel-row"><span class="panel-dot ${closedDotClass}"></span><span class="panel-label">Closed today</span><span class="panel-val">${closedList.length}</span></div>`;
+  html += `<div class="panel-row muted"><span class="panel-dot nyo"></span><span class="panel-label">Not yet open</span><span class="panel-val">${notYet.length}</span></div>`;
 
   if (active.length > 0) {
     html += `<div class="panel-divider"></div>`;
