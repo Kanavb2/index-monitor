@@ -375,6 +375,9 @@ function renderSummary(list, total) {
   const active = loaded.filter((d) => d.session === "open" || d.session === "closed-today");
   const notYet = loaded.filter((d) => d.session === "not-yet-open");
 
+  const liveCount   = active.filter((d) => d.session === "open").length;
+  const closedCount = active.filter((d) => d.session === "closed-today").length;
+
   const up   = active.filter((d) => d.change > 0).length;
   const down = active.filter((d) => d.change < 0).length;
   const flat = active.filter((d) => d.change === 0).length;
@@ -405,6 +408,9 @@ function renderSummary(list, total) {
   html += `<div class="panel-row"><span class="panel-dot up"></span><span class="panel-label">Advancing</span><span class="panel-val">${up}</span></div>`;
   html += `<div class="panel-row"><span class="panel-dot down"></span><span class="panel-label">Declining</span><span class="panel-val">${down}</span></div>`;
   if (flat) html += `<div class="panel-row"><span class="panel-dot flat"></span><span class="panel-label">Unchanged</span><span class="panel-val">${flat}</span></div>`;
+  html += `<div class="panel-divider"></div>`;
+  if (liveCount)   html += `<div class="panel-row"><span class="panel-dot live"></span><span class="panel-label">Live</span><span class="panel-val">${liveCount}</span></div>`;
+  if (closedCount) html += `<div class="panel-row"><span class="panel-dot closed"></span><span class="panel-label">Closed today</span><span class="panel-val">${closedCount}</span></div>`;
   if (notYet.length) {
     html += `<div class="panel-row muted"><span class="panel-dot nyo"></span><span class="panel-label">Not yet open</span><span class="panel-val">${notYet.length}</span></div>`;
   }

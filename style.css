@@ -211,10 +211,12 @@ body {
   border-radius: 50%;
 }
 
-.panel-dot.up   { background: var(--pos); }
-.panel-dot.down { background: var(--neg); }
-.panel-dot.flat { background: var(--text-muted); }
-.panel-dot.nyo  { background: #3a3f52; border: 1px solid var(--text-muted); }
+.panel-dot.up     { background: var(--pos); }
+.panel-dot.down   { background: var(--neg); }
+.panel-dot.flat   { background: var(--text-muted); }
+.panel-dot.live   { background: var(--accent); box-shadow: 0 0 4px var(--accent); }
+.panel-dot.closed { background: var(--text-sec); }
+.panel-dot.nyo    { background: #3a3f52; border: 1px solid var(--text-muted); }
 
 .panel-label {
   color: var(--text-sec);
