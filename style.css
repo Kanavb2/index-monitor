@@ -190,9 +190,10 @@ header {
 .summary {
   display: flex;
   gap: 0.75rem;
-  margin-bottom: 1.25rem;
+  margin-bottom: 2rem;
   flex-wrap: wrap;
   align-items: center;
+  min-height: 30px;
 }
 
 .summary-chip {
@@ -259,82 +260,6 @@ header {
 .summary-performer .perf-val.down { color: var(--neg); }
 
 /* ------------------------------------------------------------------ */
-/*  Toolbar (search + sort)                                           */
-/* ------------------------------------------------------------------ */
-
-.toolbar {
-  display: flex;
-  gap: 0.75rem;
-  margin-bottom: 2rem;
-  flex-wrap: wrap;
-}
-
-.search-wrap {
-  position: relative;
-  flex: 1;
-  min-width: 200px;
-  max-width: 420px;
-}
-
-.search-ico {
-  position: absolute;
-  left: 0.85rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-muted);
-  pointer-events: none;
-}
-
-.search-input {
-  width: 100%;
-  padding: 0.6rem 0.85rem 0.6rem 2.5rem;
-  background: var(--bg-subtle);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  color: var(--text);
-  font: 0.82rem "Inter", sans-serif;
-  outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.search-input::placeholder {
-  color: var(--text-muted);
-}
-
-.search-input:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
-}
-
-.sort-wrap {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.sort-label {
-  font-size: 0.78rem;
-  color: var(--text-muted);
-  font-weight: 500;
-}
-
-.sort-select {
-  padding: 0.6rem 0.85rem;
-  background: var(--bg-subtle);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  color: var(--text);
-  font: 0.82rem "Inter", sans-serif;
-  outline: none;
-  cursor: pointer;
-  transition: border-color 0.2s;
-}
-
-.sort-select:focus {
-  border-color: var(--accent);
-}
-
-/* ------------------------------------------------------------------ */
 /*  Error banner                                                      */
 /* ------------------------------------------------------------------ */
 
@@ -380,23 +305,6 @@ header {
 }
 
 /* ------------------------------------------------------------------ */
-/*  No results state                                                  */
-/* ------------------------------------------------------------------ */
-
-.no-results {
-  text-align: center;
-  padding: 4rem 1rem;
-  color: var(--text-muted);
-  font-size: 0.92rem;
-}
-
-.no-results span {
-  display: block;
-  font-size: 2rem;
-  margin-bottom: 0.5rem;
-}
-
-/* ------------------------------------------------------------------ */
 /*  Index card                                                        */
 /* ------------------------------------------------------------------ */
 
@@ -405,14 +313,12 @@ header {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 1.15rem 1.25rem 1rem;
-  transition: border-color 0.3s, background 0.3s, transform 0.3s, box-shadow 0.3s;
   position: relative;
   overflow: hidden;
 
-  /* Lazy fade-in via IntersectionObserver */
   opacity: 0;
   transform: translateY(18px);
-  transition: opacity 0.5s ease, transform 0.5s ease,
+  transition: opacity 0.45s ease, transform 0.45s ease,
               border-color 0.3s, background 0.3s, box-shadow 0.3s;
 }
 
@@ -421,20 +327,15 @@ header {
   transform: translateY(0);
 }
 
-.card:hover {
+.card.visible:hover {
   background: var(--bg-card-hover);
   transform: translateY(-3px);
   box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4);
 }
 
-.card.visible:hover {
-  transform: translateY(-3px);
-}
+.card.pos.visible:hover { border-color: var(--pos-border); }
+.card.neg.visible:hover { border-color: var(--neg-border); }
 
-.card.pos:hover { border-color: var(--pos-border); }
-.card.neg:hover { border-color: var(--neg-border); }
-
-/* Accent stripe at top of card */
 .card::before {
   content: "";
   position: absolute;
@@ -737,19 +638,6 @@ footer {
   text-align: center;
   color: var(--text-muted);
   font-size: 0.72rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-}
-
-footer kbd {
-  display: inline-block;
-  padding: 0.1rem 0.4rem;
-  background: var(--bg-subtle);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  font-family: inherit;
-  font-size: 0.68rem;
 }
 
 /* ------------------------------------------------------------------ */
@@ -780,14 +668,6 @@ footer kbd {
 
   .ts {
     text-align: left;
-  }
-
-  .toolbar {
-    flex-direction: column;
-  }
-
-  .search-wrap {
-    max-width: none;
   }
 
   .summary-performer {

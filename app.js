@@ -47,7 +47,6 @@ const YAHOO_CHART_BASE = "https://query1.finance.yahoo.com/v8/finance/chart/";
 let cache = {};
 let latestResults = [];
 let autoRefreshTimer = null;
-let cardObserver = null;
 
 /* ================================================================== */
 /*  Networking                                                        */
@@ -90,6 +89,14 @@ async function fetchIndex(index) {
   const dayLow = closes.length ? Math.min(...closes) : price;
   const currency = meta.currency || "";
 
+  // Use the actual regular trading period from the API for open/closed
+  const tradingPeriod = meta.currentTradingPeriod?.regular;
+  let marketOpen = false;
+  if (tradingPeriod) {
+    const now = Math.floor(Date.now() / 1000);
+    marketOpen = now >= tradingPeriod.start && now <= tradingPeriod.end;
+  }
+
   return {
     ...index,
     price,
@@ -101,6 +108,7 @@ async function fetchIndex(index) {
     dayLow,
     currency,
     marketTime: meta.regularMarketTime,
+    marketOpen,
     ok: true,
   };
 }
@@ -206,10 +214,6 @@ function buildRangeBar(data) {
 /*  Card rendering                                                    */
 /* ================================================================== */
 
-function isMarketOpen(data) {
-  return data.marketTime && Date.now() / 1000 - data.marketTime < 300;
-}
-
 function createCard(data) {
   const el = document.createElement("div");
   el.className = "card";
@@ -246,7 +250,6 @@ function createCard(data) {
 
   const positive = data.change >= 0;
   const arrow = positive ? "&#9650;" : "&#9660;";
-  const open = isMarketOpen(data);
 
   el.classList.add(positive ? "pos" : "neg");
   el.innerHTML = `
@@ -257,7 +260,7 @@ function createCard(data) {
       </div>
       <div class="card-meta">
         <div class="mkt-status">
-          <span class="s-dot ${open ? "on" : ""}"></span>${open ? "Open" : "Closed"}
+          <span class="s-dot ${data.marketOpen ? "on" : ""}"></span>${data.marketOpen ? "Open" : "Closed"}
         </div>
         ${data.currency ? `<div class="card-currency">${data.currency}</div>` : ""}
       </div>
@@ -289,107 +292,49 @@ function createCard(data) {
 }
 
 /* ================================================================== */
-/*  IntersectionObserver for lazy card animations                     */
-/* ================================================================== */
-
-function setupObserver() {
-  if (cardObserver) cardObserver.disconnect();
-
-  cardObserver = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add("visible");
-          cardObserver.unobserve(entry.target);
-        }
-      });
-    },
-    { threshold: 0.08, rootMargin: "40px" }
-  );
-
-  document.querySelectorAll(".card").forEach((card) => {
-    cardObserver.observe(card);
-  });
-}
-
-/* ================================================================== */
-/*  Sorting & filtering                                               */
-/* ================================================================== */
-
-function getFilteredSorted(list) {
-  const query = (document.getElementById("searchInput")?.value || "").toLowerCase().trim();
-  const sort = document.getElementById("sortSelect")?.value || "region";
-
-  let filtered = list;
-  if (query) {
-    filtered = list.filter(
-      (d) =>
-        d.name.toLowerCase().includes(query) ||
-        d.co.toLowerCase().includes(query) ||
-        d.rg.toLowerCase().includes(query) ||
-        d.sym.toLowerCase().includes(query)
-    );
-  }
-
-  const regionOrder = Object.fromEntries(REGIONS.map((r, i) => [r, i]));
-
-  switch (sort) {
-    case "change-desc":
-      filtered.sort((a, b) => (b.changePercent ?? -999) - (a.changePercent ?? -999));
-      break;
-    case "change-asc":
-      filtered.sort((a, b) => (a.changePercent ?? 999) - (b.changePercent ?? 999));
-      break;
-    case "name":
-      filtered.sort((a, b) => a.name.localeCompare(b.name));
-      break;
-    default:
-      filtered.sort((a, b) => (regionOrder[a.rg] ?? 99) - (regionOrder[b.rg] ?? 99));
-  }
-
-  return { filtered, sort };
-}
-
-/* ================================================================== */
 /*  Page rendering                                                    */
 /* ================================================================== */
 
-function renderCards(list) {
+function renderSkeletonLayout() {
   const main = document.getElementById("main");
   main.innerHTML = "";
 
-  const { filtered, sort } = getFilteredSorted(list);
+  for (const region of REGIONS) {
+    const items = INDICES.filter((d) => d.rg === region);
+    if (!items.length) continue;
 
-  if (filtered.length === 0) {
-    main.innerHTML = `<div class="no-results"><span>\u{1F50D}</span>No indices match your search.</div>`;
-    return;
-  }
+    const section = document.createElement("section");
+    section.className = "region";
+    section.innerHTML = `<h2 class="region-title">${region}</h2>`;
 
-  if (sort === "region") {
-    for (const region of REGIONS) {
-      const items = filtered.filter((d) => d.rg === region);
-      if (!items.length) continue;
-      const section = document.createElement("section");
-      section.className = "region";
-      section.innerHTML = `<h2 class="region-title">${region}</h2>`;
-      const grid = document.createElement("div");
-      grid.className = "grid";
-      items.forEach((d) => grid.appendChild(createCard(d)));
-      section.appendChild(grid);
-      main.appendChild(section);
-    }
-  } else {
     const grid = document.createElement("div");
     grid.className = "grid";
-    filtered.forEach((d) => grid.appendChild(createCard(d)));
-    main.appendChild(grid);
-  }
+    items.forEach((d) => {
+      const card = createCard({ ...d, ok: false, err: false });
+      card.classList.add("visible");
+      grid.appendChild(card);
+    });
 
-  setupObserver();
+    section.appendChild(grid);
+    main.appendChild(section);
+  }
+}
+
+function replaceCard(data) {
+  const existing = document.querySelector(
+    `[data-sym="${CSS.escape(data.sym)}"]`
+  );
+  if (!existing) return;
+
+  const newCard = createCard(data);
+  existing.replaceWith(newCard);
+  requestAnimationFrame(() => newCard.classList.add("visible"));
 }
 
 function renderSummary(list) {
   const loaded = list.filter((d) => d.ok);
+  if (!loaded.length) return;
+
   const up = loaded.filter((d) => d.change > 0).length;
   const down = loaded.filter((d) => d.change < 0).length;
   const flat = loaded.filter((d) => d.change === 0).length;
@@ -421,40 +366,44 @@ function renderSummary(list) {
 }
 
 /* ================================================================== */
-/*  Data loading                                                      */
+/*  Data loading — streams each card as it arrives                    */
 /* ================================================================== */
 
 async function refresh() {
   const btn = document.getElementById("btnRef");
   btn.classList.add("spin");
+  document.getElementById("errBanner").classList.remove("show");
+  document.getElementById("summary").innerHTML = "";
 
-  renderCards(INDICES.map((i) => ({ ...i, ok: false, err: false })));
+  latestResults = INDICES.map((i) => ({ ...i, ok: false, err: false }));
+  renderSkeletonLayout();
 
   let failCount = 0;
-  const results = await Promise.all(
-    INDICES.map(async (idx) => {
-      try {
-        const result = await fetchIndex(idx);
-        cache[idx.sym] = result;
-        return result;
-      } catch {
-        failCount++;
-        return { ...idx, ok: false, err: true };
-      }
-    })
-  );
 
-  latestResults = results;
-  renderCards(results);
-  renderSummary(results);
+  const promises = INDICES.map(async (idx, i) => {
+    try {
+      const result = await fetchIndex(idx);
+      cache[idx.sym] = result;
+      latestResults[i] = result;
+      replaceCard(result);
+      renderSummary(latestResults);
+    } catch {
+      failCount++;
+      const errData = { ...idx, ok: false, err: true };
+      latestResults[i] = errData;
+      replaceCard(errData);
+    }
+  });
 
-  const banner = document.getElementById("errBanner");
+  await Promise.all(promises);
+
+  renderSummary(latestResults);
+
   if (failCount) {
+    const banner = document.getElementById("errBanner");
     banner.classList.add("show");
     document.getElementById("errMsg").textContent =
       `${failCount} ${failCount === 1 ? "index" : "indices"} failed to load. Data may be incomplete.`;
-  } else {
-    banner.classList.remove("show");
   }
 
   document.getElementById("ts").textContent =
@@ -469,9 +418,9 @@ async function retrySingle(sym) {
   try {
     const result = await fetchIndex(idx);
     cache[sym] = result;
-
-    latestResults = latestResults.map((r) => (r.sym === sym ? result : r));
-    renderCards(latestResults);
+    const i = latestResults.findIndex((r) => r.sym === sym);
+    if (i !== -1) latestResults[i] = result;
+    replaceCard(result);
     renderSummary(latestResults);
   } catch {
     /* still broken */
@@ -482,36 +431,19 @@ async function retrySingle(sym) {
 /*  Event listeners & bootstrap                                       */
 /* ================================================================== */
 
-// Header date
-document.getElementById("headerDate").textContent = new Date().toLocaleDateString(
-  "en-US",
-  { weekday: "long", year: "numeric", month: "long", day: "numeric" }
-);
+document.getElementById("headerDate").textContent =
+  new Date().toLocaleDateString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 
-// Auto-refresh toggle
 document.getElementById("arToggle").addEventListener("change", function () {
   clearInterval(autoRefreshTimer);
   autoRefreshTimer = this.checked ? setInterval(refresh, 60_000) : null;
 });
 
-// Refresh button
 document.getElementById("btnRef").addEventListener("click", refresh);
 
-// Search + sort (re-render existing data without re-fetching)
-document.getElementById("searchInput").addEventListener("input", () => {
-  if (latestResults.length) renderCards(latestResults);
-});
-
-document.getElementById("sortSelect").addEventListener("change", () => {
-  if (latestResults.length) renderCards(latestResults);
-});
-
-// Keyboard shortcut: R to refresh
-document.addEventListener("keydown", (e) => {
-  if (e.key === "r" && !e.metaKey && !e.ctrlKey && e.target.tagName !== "INPUT") {
-    refresh();
-  }
-});
-
-// Go
 refresh();
