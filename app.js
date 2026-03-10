@@ -102,43 +102,114 @@ function getSessionState(index) {
 /*  Fetch a single index from Yahoo Finance                           */
 /* ================================================================== */
 
+function dateFmtForTz(tz) {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit" });
+}
+
+function shouldHaveTraded(index, isoDate) {
+  const [y, m, d] = isoDate.split("-").map(Number);
+  const dt = new Date(y, m - 1, d, 12, 0, 0);
+  const dayName = dt.toLocaleDateString("en-US", { weekday: "short" });
+  if (dayName === "Sat" || dayName === "Sun") return false;
+
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat("en-US", {
+      timeZone: index.tz,
+      hour: "numeric",
+      minute: "numeric",
+      hourCycle: "h23",
+    })
+      .formatToParts(new Date())
+      .map((p) => [p.type, p.value])
+  );
+  const nowMins = parseInt(parts.hour) * 60 + parseInt(parts.minute);
+  const openMins = index.mktOpen[0] * 60 + index.mktOpen[1];
+
+  const todayInTz = dateFmtForTz(index.tz).format(new Date());
+  if (isoDate !== todayInTz) return true;
+  return nowMins >= openMins;
+}
+
+function friendlyDate(isoDate) {
+  const [y, m, d] = isoDate.split("-").map(Number);
+  const dt = new Date(y, m - 1, d);
+  return dt.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+}
+
 async function fetchIndex(index) {
   const cacheBust = Math.floor(Date.now() / 30_000);
   const url =
     YAHOO_CHART_BASE +
     encodeURIComponent(index.sym) +
-    `?range=1d&interval=5m&_=${cacheBust}`;
+    `?range=5d&interval=5m&_=${cacheBust}`;
 
   const json = await proxyFetch(url);
   const result = json.chart.result[0];
   const meta = result.meta;
 
-  const price = meta.regularMarketPrice;
-  const previousClose = meta.chartPreviousClose;
-  const change = price - previousClose;
-  const changePercent = previousClose ? (change / previousClose) * 100 : 0;
-
+  const timestamps = result.timestamp ?? [];
   const rawCloses = result.indicators?.quote?.[0]?.close ?? [];
-  const closes = rawCloses.filter((v) => v != null);
+  const chartPrevClose = meta.chartPreviousClose;
+  const dateFmt = dateFmtForTz(index.tz);
 
-  const dayHigh = closes.length ? Math.max(...closes) : price;
-  const dayLow = closes.length ? Math.min(...closes) : price;
-  const currency = meta.currency || "";
+  // Group datapoints by calendar date in exchange timezone
+  const dayBuckets = {};
+  timestamps.forEach((ts, i) => {
+    const dateStr = dateFmt.format(new Date(ts * 1000));
+    if (!dayBuckets[dateStr]) dayBuckets[dateStr] = [];
+    dayBuckets[dateStr].push(rawCloses[i]);
+  });
 
-  const session = getSessionState(index);
+  const sortedDates = Object.keys(dayBuckets).sort();
+
+  // Build per-day session objects
+  const days = [];
+  let prevClose = chartPrevClose;
+  for (const dateStr of sortedDates) {
+    const validCloses = dayBuckets[dateStr].filter((v) => v != null);
+    if (!validCloses.length) continue;
+    const lastClose = validCloses[validCloses.length - 1];
+    const change = lastClose - prevClose;
+    const changePercent = prevClose ? (change / prevClose) * 100 : 0;
+    days.push({
+      date: dateStr,
+      label: friendlyDate(dateStr),
+      prevClose,
+      lastClose,
+      change,
+      changePercent,
+      closes: validCloses,
+      dayHigh: Math.max(...validCloses),
+      dayLow: Math.min(...validCloses),
+    });
+    prevClose = lastClose;
+  }
+
+  // Most recent session drives marker color
+  const latest = days[days.length - 1] || {};
+  const price = meta.regularMarketPrice;
+  let session = getSessionState(index);
+
+  // If getSessionState says "open" but our data doesn't include today,
+  // the market just opened and Yahoo hasn't streamed data yet — treat as closed
+  const todayStr = dateFmtForTz(index.tz).format(new Date());
+  if (session === "open" && latest.date && latest.date !== todayStr) {
+    session = "closed";
+  }
 
   return {
     ...index,
     price,
-    previousClose,
-    change,
-    changePercent,
-    closes,
-    dayHigh,
-    dayLow,
-    currency,
+    previousClose: latest.prevClose,
+    change: latest.change ?? 0,
+    changePercent: latest.changePercent ?? 0,
+    closes: latest.closes ?? [],
+    dayHigh: latest.dayHigh ?? price,
+    dayLow: latest.dayLow ?? price,
+    currency: meta.currency || "",
     marketTime: meta.regularMarketTime,
     session,
+    days,
     ok: true,
   };
 }
@@ -211,13 +282,54 @@ function buildSparkline(closes, isPositive) {
 /*  Popup HTML builder                                                */
 /* ================================================================== */
 
-function buildPopupHTML(data) {
-  const positive = data.change >= 0;
+function buildPopupHTML(data, globalDates) {
+  const days = data.days || [];
+  const dayByDate = {};
+  days.forEach((d) => (dayByDate[d.date] = d));
+
+  const [newestDate, olderDate] = globalDates || [];
+  const newestDay = newestDate ? dayByDate[newestDate] : days[days.length - 1];
+  const olderDay  = olderDate  ? dayByDate[olderDate]  : (days.length > 1 ? days[days.length - 2] : null);
+
+  const displayDay = newestDay || days[days.length - 1];
+  const positive = displayDay ? displayDay.changePercent >= 0 : data.change >= 0;
   const arrow = positive ? "\u25B2" : "\u25BC";
   const chgClass = positive ? "pos" : "neg";
+
   const statusHTML = data.session === "open"
     ? '<span class="popup-open">\u25CF Live</span>'
     : '<span class="popup-closed">\u25CF Closed</span>';
+
+  let newestSection;
+  if (newestDay) {
+    newestSection = `
+      <div class="popup-price">${formatPrice(newestDay.lastClose)} <span class="popup-date">${newestDay.label}</span></div>
+      <div class="popup-chg ${chgClass}">
+        ${arrow} ${formatChange(newestDay.change)}
+        <span class="popup-badge">${formatPercent(newestDay.changePercent)}</span>
+      </div>`;
+  } else {
+    const lastActual = days[days.length - 1];
+    const traded = newestDate ? shouldHaveTraded(data, newestDate) : false;
+    const noDataLabel = traded ? "Holiday" : "Not opened yet";
+    newestSection = `
+      <div class="popup-price">${lastActual ? formatPrice(lastActual.lastClose) : "\u2014"}</div>
+      <div class="popup-chg" style="color:var(--text-muted)">${newestDate ? friendlyDate(newestDate) : ""}: ${noDataLabel}</div>`;
+  }
+
+  let prevSessionHTML = "";
+  if (olderDay) {
+    const prevPos = olderDay.changePercent >= 0;
+    const prevArrow = prevPos ? "\u25B2" : "\u25BC";
+    const prevCls = prevPos ? "pos" : "neg";
+    prevSessionHTML = `
+      <div class="popup-prev">
+        <span class="popup-prev-label">${olderDay.label}</span>
+        <span class="popup-prev-chg ${prevCls}">${prevArrow} ${formatPercent(olderDay.changePercent)}</span>
+      </div>`;
+  }
+
+  const sparkDay = displayDay || {};
 
   return `
     <div class="popup-card">
@@ -226,20 +338,17 @@ function buildPopupHTML(data) {
         ${statusHTML}
       </div>
       <div class="popup-name">${data.name}</div>
-      <div class="popup-price">${formatPrice(data.price)}</div>
-      <div class="popup-chg ${chgClass}">
-        ${arrow} ${formatChange(data.change)}
-        <span class="popup-badge">${formatPercent(data.changePercent)}</span>
-      </div>
-      <div class="popup-spark">${buildSparkline(data.closes, positive)}</div>
+      ${newestSection}
+      ${prevSessionHTML}
+      <div class="popup-spark">${buildSparkline(sparkDay.closes || data.closes, positive)}</div>
       <div class="popup-details">
         <span>
           <span class="popup-detail-label">Prev Close</span>
-          <span class="popup-detail-val">${formatPrice(data.previousClose)}</span>
+          <span class="popup-detail-val">${formatPrice(displayDay ? displayDay.prevClose : data.previousClose)}</span>
         </span>
         <span>
           <span class="popup-detail-label">Day Range</span>
-          <span class="popup-detail-val">${formatPrice(data.dayLow)} \u2013 ${formatPrice(data.dayHigh)}</span>
+          <span class="popup-detail-val">${formatPrice(displayDay ? displayDay.dayLow : data.dayLow)} \u2013 ${formatPrice(displayDay ? displayDay.dayHigh : data.dayHigh)}</span>
         </span>
       </div>
       <div class="popup-desc">${data.desc}</div>
@@ -333,16 +442,10 @@ function updateMarker(data) {
   marker.setStyle({ fillColor, color: strokeColor, fillOpacity: baseFill, opacity: baseOpacity, weight: baseWeight });
   marker.setRadius(baseRadius);
 
-  const mktDate = new Date(data.marketTime * 1000).toLocaleDateString("en-US", {
-    timeZone: data.tz,
-    month: "short",
-    day: "numeric",
-  });
-  const statusLabel = isOpen ? "live" : mktDate;
-  marker.bindTooltip(
-    `<span class="tt-name">${data.name}</span> <span class="tt-pct ${positive ? "up" : "down"}">${formatPercent(data.changePercent)}</span> <span class="tt-status">${statusLabel}</span>`,
-    { className: "idx-tooltip", direction: "top", offset: [0, -8] }
-  );
+  // Simple tooltip during streaming (will be replaced by global-date tooltip later)
+  const statusLabel = isOpen ? "live" : "closed";
+  const ttHtml = `<span class="tt-name">${data.name}</span> <span class="tt-pct ${positive ? "up" : "down"}">${formatPercent(data.changePercent)}</span> <span class="tt-status">${statusLabel}</span>`;
+  marker.bindTooltip(ttHtml, { className: "idx-tooltip", direction: "top", offset: [0, -8] });
 
   marker.bindPopup(buildPopupHTML(data), { className: "idx-popup", maxWidth: 340, minWidth: 280 });
 
@@ -350,9 +453,95 @@ function updateMarker(data) {
   marker.on("mouseout",  function () { this.setRadius(baseRadius); this.setStyle({ fillOpacity: baseFill, opacity: baseOpacity, weight: baseWeight }); });
 }
 
+/* ------------------------------------------------------------------ */
+/*  Global dates & tooltip rebind after all data loads                 */
+/* ------------------------------------------------------------------ */
+
+function getGlobalDates() {
+  const allDates = new Set();
+  latestResults.forEach((d) => {
+    if (!d.ok || !d.days) return;
+    d.days.forEach((day) => allDates.add(day.date));
+  });
+  return [...allDates].sort().reverse().slice(0, 2);
+}
+
+function rebindAllTooltips() {
+  const globalDates = getGlobalDates();
+  const [newestDate, olderDate] = globalDates;
+  if (!newestDate) return;
+
+  const newestLabel = friendlyDate(newestDate);
+  const olderLabel  = olderDate ? friendlyDate(olderDate) : null;
+
+  latestResults.forEach((data) => {
+    if (!data.ok) return;
+    const marker = markerMap[data.sym];
+    if (!marker) return;
+
+    const days = data.days || [];
+    const dayByDate = {};
+    days.forEach((d) => (dayByDate[d.date] = d));
+
+    const isOpen = data.session === "open";
+
+    const newestDay = dayByDate[newestDate];
+    const olderDay  = olderDate ? dayByDate[olderDate] : null;
+
+    let ttHtml = `<span class="tt-name">${data.name}</span>`;
+
+    if (newestDay) {
+      const p = newestDay.changePercent >= 0;
+      ttHtml += ` <span class="tt-pct ${p ? "up" : "down"}">${formatPercent(newestDay.changePercent)}</span>`;
+      ttHtml += `<span class="tt-status">${isOpen && newestDay === days[days.length - 1] ? "live" : newestLabel}</span>`;
+    } else {
+      const traded = shouldHaveTraded(data, newestDate);
+      const noDataLabel = traded ? "holiday" : "not opened";
+      ttHtml += ` <span class="tt-pct nyo">\u2014</span>`;
+      ttHtml += `<span class="tt-status nyo">${newestLabel}: ${noDataLabel}</span>`;
+    }
+
+    if (olderDay) {
+      const op = olderDay.changePercent >= 0;
+      ttHtml += `<span class="tt-sep">|</span><span class="tt-prev">${olderLabel}: <span class="${op ? "up" : "down"}">${formatPercent(olderDay.changePercent)}</span></span>`;
+    }
+
+    // Gray out markers with no data for the newest date (holiday / not opened)
+    if (!newestDay) {
+      marker.off("mouseover mouseout");
+      marker.unbindTooltip();
+      marker.unbindPopup();
+      marker.setStyle({ fillColor: "#334155", color: "#475569", fillOpacity: 0.4, opacity: 0.5, weight: 2 });
+      marker.setRadius(6);
+      marker.on("mouseover", function () { this.setRadius(8); this.setStyle({ fillOpacity: 0.6, opacity: 0.7 }); });
+      marker.on("mouseout",  function () { this.setRadius(6); this.setStyle({ fillOpacity: 0.4, opacity: 0.5 }); });
+      marker.bindTooltip(ttHtml, { className: "idx-tooltip", direction: "top", offset: [0, -8] });
+      marker.bindPopup(buildPopupHTML(data, globalDates), { className: "idx-popup", maxWidth: 340, minWidth: 280 });
+    } else {
+      marker.unbindTooltip();
+      marker.bindTooltip(ttHtml, { className: "idx-tooltip", direction: "top", offset: [0, -8] });
+      marker.unbindPopup();
+      marker.bindPopup(buildPopupHTML(data, globalDates), { className: "idx-popup", maxWidth: 340, minWidth: 280 });
+    }
+  });
+}
+
 /* ================================================================== */
 /*  Summary panel                                                     */
 /* ================================================================== */
+
+function computeSentiment(up, total, avg) {
+  if (!total) return ["Neutral", ""];
+  let label, cls;
+  if      (avg > 1)     { label = "Highly bullish";   cls = "up"; }
+  else if (avg > 0.5)   { label = "Bullish";          cls = "up"; }
+  else if (avg > 0.1)   { label = "Slightly bullish"; cls = "up"; }
+  else if (avg >= -0.1) { label = "Neutral";           cls = ""; }
+  else if (avg >= -0.5) { label = "Slightly bearish";  cls = "down"; }
+  else if (avg >= -1)   { label = "Bearish";           cls = "down"; }
+  else                   { label = "Highly bearish";   cls = "down"; }
+  return [label, cls];
+}
 
 function renderSummary(list, total) {
   const loaded = list.filter((d) => d.ok);
@@ -360,59 +549,66 @@ function renderSummary(list, total) {
   const doneCount = loaded.length + failed.length;
   const loading = doneCount < total;
 
-  const liveList   = loaded.filter((d) => d.session === "open");
-  const closedList = loaded.filter((d) => d.session === "closed");
-
-  const up   = loaded.filter((d) => d.change > 0).length;
-  const down = loaded.filter((d) => d.change < 0).length;
-  const flat = loaded.filter((d) => d.change === 0).length;
-
-  const closedAvg = closedList.length
-    ? closedList.reduce((s, d) => s + d.changePercent, 0) / closedList.length
-    : 0;
-
-  let best = null;
-  let worst = null;
-  let sumPct = 0;
+  // Collect ALL day entries from ALL indices, grouped by date
+  const dateGroups = {};
   loaded.forEach((d) => {
-    sumPct += d.changePercent;
-    if (!best || d.changePercent > best.changePercent) best = d;
-    if (!worst || d.changePercent < worst.changePercent) worst = d;
+    (d.days || []).forEach((day) => {
+      if (!dateGroups[day.date]) dateGroups[day.date] = { label: day.label, entries: [] };
+      dateGroups[day.date].entries.push({ idx: d, day });
+    });
   });
 
-  const avgPct = loaded.length ? sumPct / loaded.length : 0;
+  // Keep only the 2 most recent dates
+  const sortedDates = Object.keys(dateGroups).sort().reverse().slice(0, 2);
 
-  let sentiment = "Neutral";
-  if (loaded.length > 0) {
-    const ratio = up / loaded.length;
-    if (ratio >= 0.65)      sentiment = "Bullish";
-    else if (ratio >= 0.5)  sentiment = "Mildly bullish";
-    else if (ratio > 0.35)  sentiment = "Mildly bearish";
-    else                     sentiment = "Bearish";
-  }
-
-  const sentimentClass = avgPct >= 0 ? "up" : "down";
 
   let html = `<div class="panel-heading">Market Overview</div>`;
-  html += `<div class="panel-row"><span class="panel-dot up"></span><span class="panel-label">Advancing</span><span class="panel-val">${up}</span></div>`;
-  html += `<div class="panel-row"><span class="panel-dot down"></span><span class="panel-label">Declining</span><span class="panel-val">${down}</span></div>`;
-  if (flat) html += `<div class="panel-row"><span class="panel-dot flat"></span><span class="panel-label">Unchanged</span><span class="panel-val">${flat}</span></div>`;
-  html += `<div class="panel-divider"></div>`;
-  const closedDotClass = closedList.length ? (closedAvg >= 0 ? "up" : "down") : "closed";
-  html += `<div class="panel-row"><span class="panel-dot live"></span><span class="panel-label">Live</span><span class="panel-val">${liveList.length}</span></div>`;
-  html += `<div class="panel-row"><span class="panel-dot ${closedDotClass}"></span><span class="panel-label">Closed</span><span class="panel-val">${closedList.length}</span></div>`;
 
-  if (loaded.length > 0) {
+  for (let i = 0; i < sortedDates.length; i++) {
+    const dateKey = sortedDates[i];
+    const group = dateGroups[dateKey];
+    const entries = group.entries;
+    const isNewest = i === 0;
+
+    // Count live/closed: "live" only if session=open AND this day is the index's latest
+    let live = 0, closed = 0;
+    entries.forEach(({ idx, day }) => {
+      const isLatest = idx.days && idx.days[idx.days.length - 1] === day;
+      if (idx.session === "open" && isLatest) live++;
+      else closed++;
+    });
+
+    const up   = entries.filter(({ day }) => day.changePercent > 0).length;
+    const down = entries.filter(({ day }) => day.changePercent < 0).length;
+    const avg  = entries.reduce((s, { day }) => s + day.changePercent, 0) / entries.length;
+    const avgCls = avg >= 0 ? "up" : "down";
+    const [sentiment, sentCls] = computeSentiment(up, entries.length, avg);
+
+    // Indices without data for this date: holiday vs not opened yet
+    const missing = loaded.filter((d) => !(d.days || []).some((dy) => dy.date === dateKey));
+    let holidayCount = 0, notYetCount = 0;
+    missing.forEach((d) => {
+      if (shouldHaveTraded(d, dateKey)) holidayCount++;
+      else notYetCount++;
+    });
+
+    html += `<div class="panel-date">${group.label}</div>`;
+    if (live)   html += `<div class="panel-row"><span class="panel-dot live"></span><span class="panel-label">${live} live</span></div>`;
+    if (closed) html += `<div class="panel-row"><span class="panel-dot closed"></span><span class="panel-label">${closed} closed</span></div>`;
+    if (isNewest && holidayCount > 0) {
+      html += `<div class="panel-row muted"><span class="panel-dot nyo"></span><span class="panel-label">${holidayCount} holiday</span></div>`;
+    }
+    if (isNewest && notYetCount > 0) {
+      html += `<div class="panel-row muted"><span class="panel-dot nyo"></span><span class="panel-label">${notYetCount} not opened yet</span></div>`;
+    }
+    html += `<div class="panel-row"><span class="panel-dot up"></span><span class="panel-label">Advancing</span><span class="panel-val">${up}</span></div>`;
+    html += `<div class="panel-row"><span class="panel-dot down"></span><span class="panel-label">Declining</span><span class="panel-val">${down}</span></div>`;
+    html += `<div class="panel-metric"><span class="panel-metric-label">Avg</span><span class="panel-metric-val ${avgCls}">${formatPercent(avg)}</span></div>`;
+    html += `<div class="panel-metric"><span class="panel-metric-label">Sentiment</span><span class="panel-metric-val ${sentCls}">${sentiment}</span></div>`;
+
     html += `<div class="panel-divider"></div>`;
-    html += `<div class="panel-metric"><span class="panel-metric-label">Avg Change</span><span class="panel-metric-val ${sentimentClass}">${formatPercent(avgPct)}</span></div>`;
-    html += `<div class="panel-metric"><span class="panel-metric-label">Sentiment</span><span class="panel-metric-val ${sentimentClass}">${sentiment}</span></div>`;
   }
 
-  if (best && worst && loaded.length > 1) {
-    html += `<div class="panel-divider"></div>`;
-    html += `<div class="panel-perf">Best <strong>${best.name}</strong> <span class="up">${formatPercent(best.changePercent)}</span></div>`;
-    html += `<div class="panel-perf">Worst <strong>${worst.name}</strong> <span class="down">${formatPercent(worst.changePercent)}</span></div>`;
-  }
 
   if (loading) {
     html += `<div class="panel-progress">Loading ${doneCount}/${total}\u2026</div>`;
@@ -472,6 +668,7 @@ async function refresh() {
 
   await Promise.all(promises);
 
+  rebindAllTooltips();
   renderSummary(latestResults, INDICES.length);
   document.getElementById("ts").textContent =
     "Updated " + new Date().toLocaleTimeString();
