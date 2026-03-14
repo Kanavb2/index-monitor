@@ -34,6 +34,8 @@ const INDICES = [
 const CORS_PROXIES = [
   (u) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
   (u) => `https://corsproxy.io/?${encodeURIComponent(u)}`,
+  (u) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
+  (u) => `https://cors-anywhere.herokuapp.com/${u}`,
 ];
 
 const YAHOO_CHART_BASE = "https://query1.finance.yahoo.com/v8/finance/chart/";
@@ -56,13 +58,31 @@ let loadedCount = 0;
 async function proxyFetch(url) {
   for (const wrapUrl of CORS_PROXIES) {
     try {
-      const res = await fetch(wrapUrl(url), {
-        signal: AbortSignal.timeout(12_000),
-        headers: { "Cache-Control": "no-cache" },
+      const proxyUrl = wrapUrl(url);
+      const res = await fetch(proxyUrl, {
+        signal: AbortSignal.timeout(15_000),
+        headers: { 
+          "Cache-Control": "no-cache",
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+        },
       });
-      if (!res.ok) continue;
-      return JSON.parse(await res.text());
-    } catch {
+      if (!res.ok) {
+        console.warn(`Proxy failed with status ${res.status}: ${proxyUrl}`);
+        continue;
+      }
+      const text = await res.text();
+      if (!text || text.trim() === '') {
+        console.warn(`Proxy returned empty response: ${proxyUrl}`);
+        continue;
+      }
+      try {
+        return JSON.parse(text);
+      } catch (e) {
+        console.warn(`Failed to parse JSON from proxy: ${proxyUrl}`, e);
+        continue;
+      }
+    } catch (err) {
+      console.warn(`Proxy error: ${wrapUrl(url)}`, err.message);
       continue;
     }
   }
@@ -143,8 +163,22 @@ async function fetchIndex(index) {
     encodeURIComponent(index.sym) +
     `?range=5d&interval=5m&_=${cacheBust}`;
 
-  const json = await proxyFetch(url);
+  let json;
+  try {
+    json = await proxyFetch(url);
+  } catch (err) {
+    console.error(`Failed to fetch ${index.sym}:`, err.message);
+    throw err;
+  }
+
+  if (!json || !json.chart || !json.chart.result || !json.chart.result[0]) {
+    throw new Error(`Invalid response structure for ${index.sym}`);
+  }
+
   const result = json.chart.result[0];
+  if (!result.meta) {
+    throw new Error(`Missing meta data for ${index.sym}`);
+  }
   const meta = result.meta;
 
   const timestamps = result.timestamp ?? [];
