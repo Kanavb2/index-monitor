@@ -1,0 +1,22 @@
+{
+  "name": "global-index-monitor",
+  "version": "1.0.0",
+  "description": "An interactive world map dashboard tracking major stock market indices in real time",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx http-server . -p 8080 -o",
+    "serve": "npx http-server . -p 8080"
+  },
+  "keywords": [
+    "stock-market",
+    "indices",
+    "dashboard",
+    "leaflet",
+    "finance"
+  ],
+  "author": "Kanav Bhatnagar",
+  "license": "MIT",
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+}

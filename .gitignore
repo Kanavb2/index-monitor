@@ -2,3 +2,20 @@
 *.swp
 *.swo
 *~
+
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+
+# IDE
+.vscode/
+.idea/
+*.sublime-*
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+Thumbs.db
