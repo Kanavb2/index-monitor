@@ -13,13 +13,11 @@ async function proxyFetch(url) {
     const wrapUrl = CORS_PROXIES[i];
     try {
       const proxyUrl = wrapUrl(url);
-      if (!proxyUrl) continue; // Skip null/undefined proxy URLs
       
-      // Use simple GET request without custom headers to avoid CORS preflight
+      // Use simple GET request - no custom headers to avoid CORS preflight
+      // AllOrigins supports CORS properly for simple requests
       const res = await fetch(proxyUrl, {
         signal: AbortSignal.timeout(API_CONFIG.timeout),
-        method: 'GET',
-        mode: 'cors',
       });
       
       if (!res.ok) {
