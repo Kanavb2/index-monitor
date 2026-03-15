@@ -19,7 +19,7 @@ const CORS_PROXIES = [
 const YAHOO_CHART_BASE = "https://query1.finance.yahoo.com/v8/finance/chart/";
 
 const API_CONFIG = {
-  timeout: 12000,
+  timeout: 25000,
   range: "5d",
   interval: "15m",
 };
