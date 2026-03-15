@@ -4,10 +4,10 @@
 
 // Try self-hosted proxy first (if deployed on Netlify), then fallback to public proxies
 const getProxyUrl = (baseUrl) => {
-  // Check if we're on the same domain (Netlify deployment or GitHub Pages with proxy)
+  // Check if we're on the same domain (Netlify deployment)
   if (typeof window !== 'undefined') {
     const hostname = window.location.hostname;
-    if (hostname.includes('netlify.app') || hostname.includes('kanavb2.github.io')) {
+    if (hostname.includes('netlify.app')) {
       return `${window.location.origin}/api/proxy?url=${encodeURIComponent(baseUrl)}`;
     }
   }
@@ -15,14 +15,14 @@ const getProxyUrl = (baseUrl) => {
 };
 
 const CORS_PROXIES = [
-  // Self-hosted proxy (if available)
+  // Self-hosted proxy (if available on Netlify)
   (u) => getProxyUrl(u),
-  // AllOrigins - most reliable public proxy
+  // AllOrigins /get endpoint - returns { contents: "...", status: {...} }
   (u) => `https://api.allorigins.win/get?url=${encodeURIComponent(u)}`,
+  // AllOrigins /raw endpoint - returns raw response
   (u) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
   // Fallback proxies
   (u) => `https://corsproxy.io/?${encodeURIComponent(u)}`,
-  (u) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
 ].filter(fn => fn); // Remove null entries
 
 const YAHOO_CHART_BASE = "https://query1.finance.yahoo.com/v8/finance/chart/";
