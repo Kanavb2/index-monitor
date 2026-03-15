@@ -77,7 +77,9 @@ async function fetchIndex(index) {
   try {
     json = await proxyFetch(url);
   } catch (err) {
-    console.error(`Failed to fetch ${index.sym}:`, err.message);
+    console.error(`Failed to fetch ${index.sym} after trying all proxies:`, err.message);
+    // Log the original URL for debugging
+    console.error(`Original URL: ${url}`);
     throw err;
   }
 
