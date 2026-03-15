@@ -36,7 +36,18 @@ async function proxyFetch(url) {
       }
       
       try {
-        const parsed = JSON.parse(text);
+        let parsed = JSON.parse(text);
+        
+        // Handle AllOrigins wrapper format: { contents: "...", status: {...} }
+        if (parsed.contents) {
+          try {
+            parsed = JSON.parse(parsed.contents);
+          } catch {
+            // If contents is not JSON, it might be the actual response
+            parsed = parsed.contents;
+          }
+        }
+        
         // Validate that we got actual data
         if (parsed && (parsed.chart || parsed.error)) {
           return parsed;

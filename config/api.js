@@ -3,14 +3,14 @@
 /* ================================================================== */
 
 const CORS_PROXIES = [
-  // AllOrigins - works well, no preflight needed
+  // AllOrigins - most reliable, uses GET with query param
+  (u) => `https://api.allorigins.win/get?url=${encodeURIComponent(u)}`,
+  // Alternative AllOrigins endpoint
   (u) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
-  // CORS Anywhere alternatives that handle preflight
-  (u) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
-  // Simple GET-based proxies
+  // CORS Proxy that works with GitHub Pages
   (u) => `https://corsproxy.io/?${encodeURIComponent(u)}`,
-  (u) => `https://cors.bridged.cc/${u}`,
-  // Try direct fetch first (will fail but helps debug)
+  // Simple proxy service
+  (u) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
 ];
 
 const YAHOO_CHART_BASE = "https://query1.finance.yahoo.com/v8/finance/chart/";
