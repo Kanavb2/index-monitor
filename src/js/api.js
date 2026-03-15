@@ -68,7 +68,9 @@ async function proxyFetch(url) {
  * Fetch a single index from Yahoo Finance.
  */
 async function fetchIndex(index) {
-  const cacheBust = Math.floor(Date.now() / API_CONFIG.cacheBustInterval);
+  // Unique per-request cache bust so AllOrigins/Cloudflare never serves a stale
+  // or error-cached response from a different symbol's fetch.
+  const cacheBust = Date.now() + Math.floor(Math.random() * 100000);
   const url =
     YAHOO_CHART_BASE +
     encodeURIComponent(index.sym) +

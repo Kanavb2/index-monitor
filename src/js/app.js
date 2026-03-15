@@ -3,25 +3,43 @@
 /* ================================================================== */
 
 /**
+ * Runs an array of async tasks with a concurrency limit.
+ * @param {Function[]} tasks - Array of () => Promise functions
+ * @param {number} limit - Max concurrent tasks
+ * @param {number} stagger - ms delay between starting each task
+ */
+async function runConcurrent(tasks, limit, stagger) {
+  const results = [];
+  let next = 0;
+
+  async function worker() {
+    while (next < tasks.length) {
+      const idx = next++;
+      if (idx > 0) await new Promise((r) => setTimeout(r, stagger));
+      results[idx] = await tasks[idx]();
+    }
+  }
+
+  const workers = Array.from({ length: Math.min(limit, tasks.length) }, () => worker());
+  await Promise.all(workers);
+  return results;
+}
+
+/**
  * Refreshes all index data and updates the UI
  */
 async function refresh() {
   const btn = document.getElementById("btnRef");
   btn.classList.add("spin");
 
-  // Reset markers to loading state
   resetMarkersToLoading();
-
   setLatestResults(INDICES.map((i) => ({ ...i, ok: false, err: false })));
   renderSummary(getLatestResults(), INDICES.length);
 
-  // Fetch one at a time with a pause between each request.
-  // AllOrigins rate-limits aggressively -- even small batches get throttled.
-  const DELAY = 600; // ms between requests
   const failed = [];
 
-  for (let i = 0; i < INDICES.length; i++) {
-    const idx = INDICES[i];
+  // Build tasks -- each is a closure that fetches one index
+  const tasks = INDICES.map((idx, i) => async () => {
     try {
       const result = await fetchIndex(idx);
       setCache(idx.sym, result);
@@ -29,6 +47,7 @@ async function refresh() {
       results[i] = result;
       setLatestResults(results);
       updateMarker(result);
+      rebindAllTooltips(getLatestResults());
       renderSummary(getLatestResults(), INDICES.length);
     } catch {
       failed.push(i);
@@ -39,15 +58,15 @@ async function refresh() {
       updateMarker(errData);
       renderSummary(getLatestResults(), INDICES.length);
     }
-    if (i < INDICES.length - 1) {
-      await new Promise((r) => setTimeout(r, DELAY));
-    }
-  }
+  });
 
-  // Retry any that failed (AllOrigins may have been temporarily overwhelmed)
+  // 2 concurrent lanes, 500ms stagger between starts
+  await runConcurrent(tasks, 2, 500);
+
+  // Retry failures after a cooldown
   if (failed.length > 0) {
-    await new Promise((r) => setTimeout(r, 2000)); // longer cooldown
-    for (const i of failed) {
+    await new Promise((r) => setTimeout(r, 2000));
+    const retryTasks = failed.map((i) => async () => {
       const idx = INDICES[i];
       try {
         const result = await fetchIndex(idx);
@@ -56,12 +75,13 @@ async function refresh() {
         results[i] = result;
         setLatestResults(results);
         updateMarker(result);
+        rebindAllTooltips(getLatestResults());
         renderSummary(getLatestResults(), INDICES.length);
       } catch {
-        // still failed -- leave as error
+        // leave as error
       }
-      await new Promise((r) => setTimeout(r, DELAY));
-    }
+    });
+    await runConcurrent(retryTasks, 2, 500);
   }
 
   rebindAllTooltips(getLatestResults());
