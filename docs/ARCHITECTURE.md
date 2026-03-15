@@ -4,48 +4,44 @@
 
 ```
 Index Monitor/
-├── index.html          # Main HTML entry point
-├── src/
-│   ├── js/
-│   │   └── app.js      # Main application logic
-│   └── css/
-│       └── style.css    # Stylesheet
-├── config/
-│   ├── indices.js      # Index definitions and coordinates
-│   └── api.js          # API configuration and CORS proxies
-├── docs/               # Documentation
-└── README.md           # Project documentation
+  index.html              # Entry point (GitHub Pages root)
+  config/
+    indices.js             # Index definitions and coordinates
+    api.js                 # CORS proxy list and API settings
+  src/
+    js/
+      app.js               # Orchestration (init, refresh, events)
+      api.js               # Network layer (proxyFetch, fetchIndex)
+      charts.js            # SVG sparkline generation
+      formatters.js        # Price and change formatting
+      map.js               # Leaflet map setup and marker management
+      state.js             # Global state (cache, timers, results)
+      ui.js                # Popup and summary panel rendering
+      utils.js             # Date helpers and session-state logic
+    css/
+      style.css            # All styles
+  docs/
+    ARCHITECTURE.md        # This file
 ```
-
-## Components
-
-### Configuration (`config/`)
-- **indices.js**: Defines all tracked stock market indices with their symbols, names, coordinates, timezones, and trading hours
-- **api.js**: Contains API endpoints, CORS proxy configurations, and API settings
-
-### Application Logic (`src/js/app.js`)
-- **State Management**: Global state for cache, results, timers, and map markers
-- **Networking**: CORS proxy handling and Yahoo Finance API integration
-- **Data Processing**: Session state calculation, date formatting, and data transformation
-- **UI Components**: Map initialization, marker management, popup generation, summary panel rendering
-- **Event Handlers**: Refresh functionality and auto-refresh toggle
-
-### Styling (`src/css/style.css`)
-- CSS variables for theming
-- Responsive layout styles
-- Component-specific styles (map, popups, summary panel)
 
 ## Data Flow
 
-1. **Initialization**: Map is initialized, loading markers are placed
-2. **Data Fetching**: Each index is fetched through CORS proxies from Yahoo Finance
-3. **Streaming Updates**: Markers update as data arrives (streaming pattern)
-4. **Global Date Alignment**: After all data loads, tooltips are rebound with global date context
-5. **Auto-refresh**: Optional 60-second refresh cycle
+1. **Initialization** -- Map created, loading markers placed
+2. **Data Fetching** -- Each index fetched via CORS proxy from Yahoo Finance
+3. **Streaming Updates** -- Markers update as data arrives
+4. **Global Date Alignment** -- Tooltips rebound with full date context
+5. **Auto-refresh** -- Optional 60-second refresh cycle
+
+## CORS Proxy Strategy
+
+GitHub Pages is static-only so all Yahoo Finance requests go through
+public CORS proxies. The `proxyFetch` function tries each proxy in order
+until one returns valid data. No custom headers are sent so the browser
+never triggers a preflight OPTIONS request.
 
 ## Key Technologies
 
-- **Leaflet.js**: Interactive map rendering
-- **Yahoo Finance API**: Market data source
-- **CORS Proxies**: Bypass browser CORS restrictions
-- **Intl.DateTimeFormat**: Timezone-aware date handling
+- **Leaflet.js** -- Interactive map rendering
+- **Yahoo Finance v8 chart API** -- Market data source
+- **CORS Proxies (AllOrigins, corsproxy.io)** -- Bypass browser CORS
+- **Intl.DateTimeFormat** -- Timezone-aware date handling

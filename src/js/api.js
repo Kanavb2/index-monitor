@@ -3,74 +3,68 @@
 /* ================================================================== */
 
 /**
- * Fetches data through CORS proxies with fallback support
- * @param {string} url - The URL to fetch
- * @returns {Promise<Object>} Parsed JSON response
+ * Fetch through CORS proxies with automatic fallback.
+ * IMPORTANT: we send zero custom headers so the browser treats every
+ * request as a CORS "simple request" (no preflight OPTIONS).
  */
 async function proxyFetch(url) {
   const errors = [];
-  for (let i = 0; i < CORS_PROXIES.length; i++) {
-    const wrapUrl = CORS_PROXIES[i];
+
+  for (const proxy of CORS_PROXIES) {
+    const proxyUrl = proxy.wrap(url);
     try {
-      const proxyUrl = wrapUrl(url);
-      
-      // Use simple GET request - no custom headers to avoid CORS preflight
-      // AllOrigins supports CORS properly for simple requests
-      const res = await fetch(proxyUrl, {
-        signal: AbortSignal.timeout(API_CONFIG.timeout),
-      });
-      
+      // Bare fetch -- no headers, no mode, no credentials override.
+      // This guarantees a simple GET that never triggers preflight.
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), API_CONFIG.timeout);
+
+      const res = await fetch(proxyUrl, { signal: controller.signal });
+      clearTimeout(timer);
+
       if (!res.ok) {
-        const errorMsg = `Proxy ${i + 1} failed with status ${res.status}`;
-        errors.push(errorMsg);
-        console.warn(`${errorMsg}: ${proxyUrl.substring(0, 80)}...`);
+        errors.push(`${proxyUrl.substring(0, 60)}... => HTTP ${res.status}`);
         continue;
       }
-      
+
       const text = await res.text();
-      if (!text || text.trim() === '') {
-        const errorMsg = `Proxy ${i + 1} returned empty response`;
-        errors.push(errorMsg);
-        console.warn(`${errorMsg}: ${proxyUrl.substring(0, 80)}...`);
+      if (!text || text.trim() === "") {
+        errors.push(`${proxyUrl.substring(0, 60)}... => empty body`);
         continue;
       }
-      
+
+      let data;
       try {
-        let parsed = JSON.parse(text);
-        
-        // Handle AllOrigins /get endpoint wrapper format: { contents: "JSON_STRING", status: {...} }
-        if (parsed.contents) {
-          // AllOrigins wraps the response in a contents field as a JSON string
-          parsed = JSON.parse(parsed.contents);
-        }
-        
-        // Validate that we got actual data
-        if (parsed && (parsed.chart || parsed.error)) {
-          return parsed;
-        }
-        throw new Error("Invalid response structure");
-      } catch (e) {
-        const errorMsg = `Proxy ${i + 1} JSON parse error: ${e.message}`;
-        errors.push(errorMsg);
-        console.warn(`${errorMsg}: ${proxyUrl.substring(0, 80)}...`);
+        data = JSON.parse(text);
+      } catch {
+        errors.push(`${proxyUrl.substring(0, 60)}... => invalid JSON`);
         continue;
       }
+
+      // AllOrigins /get wraps the real body inside a "contents" string
+      if (proxy.unwrap && typeof data.contents === "string") {
+        try {
+          data = JSON.parse(data.contents);
+        } catch {
+          errors.push(`${proxyUrl.substring(0, 60)}... => bad inner JSON`);
+          continue;
+        }
+      }
+
+      // Yahoo Finance always returns { chart: { result: [...] } }
+      if (data && data.chart) return data;
+
+      errors.push(`${proxyUrl.substring(0, 60)}... => unexpected shape`);
     } catch (err) {
-      const errorMsg = `Proxy ${i + 1} network error: ${err.message}`;
-      errors.push(errorMsg);
-      console.warn(`${errorMsg}: ${wrapUrl(url).substring(0, 80)}...`);
-      continue;
+      errors.push(`${proxyUrl.substring(0, 60)}... => ${err.message}`);
     }
   }
-  
-  const errorSummary = errors.length > 0 ? `\nErrors: ${errors.slice(0, 3).join('; ')}` : '';
-  throw new Error(`All ${CORS_PROXIES.length} CORS proxies failed${errorSummary}`);
+
+  console.warn("All proxies failed:", errors);
+  throw new Error("All CORS proxies failed");
 }
 
 /**
- * Fetches index data from Yahoo Finance API
- * @param {Object} index - Index configuration object
- * @returns {Promise<Object>} Processed index data with price, changes, and session info
+ * Fetch a single index from Yahoo Finance.
  */
 async function fetchIndex(index) {
   const cacheBust = Math.floor(Date.now() / API_CONFIG.cacheBustInterval);
@@ -83,20 +77,16 @@ async function fetchIndex(index) {
   try {
     json = await proxyFetch(url);
   } catch (err) {
-    console.error(`Failed to fetch ${index.sym} after trying all proxies:`, err.message);
-    // Log the original URL for debugging
-    console.error(`Original URL: ${url}`);
+    console.error(`Failed to fetch ${index.sym}:`, err.message);
     throw err;
   }
 
   if (!json || !json.chart || !json.chart.result || !json.chart.result[0]) {
-    throw new Error(`Invalid response structure for ${index.sym}`);
+    throw new Error(`Invalid response for ${index.sym}`);
   }
 
   const result = json.chart.result[0];
-  if (!result.meta) {
-    throw new Error(`Missing meta data for ${index.sym}`);
-  }
+  if (!result.meta) throw new Error(`Missing meta for ${index.sym}`);
   const meta = result.meta;
 
   const timestamps = result.timestamp ?? [];
@@ -137,13 +127,10 @@ async function fetchIndex(index) {
     prevClose = lastClose;
   }
 
-  // Most recent session drives marker color
   const latest = days[days.length - 1] || {};
   const price = meta.regularMarketPrice;
   let session = getSessionState(index);
 
-  // If getSessionState says "open" but our data doesn't include today,
-  // the market just opened and Yahoo hasn't streamed data yet — treat as closed
   const todayStr = dateFmtForTz(index.tz).format(new Date());
   if (session === "open" && latest.date && latest.date !== todayStr) {
     session = "closed";
