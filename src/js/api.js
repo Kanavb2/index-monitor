@@ -8,37 +8,57 @@
  * @returns {Promise<Object>} Parsed JSON response
  */
 async function proxyFetch(url) {
-  for (const wrapUrl of CORS_PROXIES) {
+  const errors = [];
+  for (let i = 0; i < CORS_PROXIES.length; i++) {
+    const wrapUrl = CORS_PROXIES[i];
     try {
       const proxyUrl = wrapUrl(url);
       const res = await fetch(proxyUrl, {
         signal: AbortSignal.timeout(API_CONFIG.timeout),
         headers: { 
           "Cache-Control": "no-cache",
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+          "Accept": "application/json",
         },
       });
+      
       if (!res.ok) {
-        console.warn(`Proxy failed with status ${res.status}: ${proxyUrl}`);
+        const errorMsg = `Proxy ${i + 1} failed with status ${res.status}`;
+        errors.push(errorMsg);
+        console.warn(`${errorMsg}: ${proxyUrl.substring(0, 80)}...`);
         continue;
       }
+      
       const text = await res.text();
       if (!text || text.trim() === '') {
-        console.warn(`Proxy returned empty response: ${proxyUrl}`);
+        const errorMsg = `Proxy ${i + 1} returned empty response`;
+        errors.push(errorMsg);
+        console.warn(`${errorMsg}: ${proxyUrl.substring(0, 80)}...`);
         continue;
       }
+      
       try {
-        return JSON.parse(text);
+        const parsed = JSON.parse(text);
+        // Validate that we got actual data
+        if (parsed && (parsed.chart || parsed.error)) {
+          return parsed;
+        }
+        throw new Error("Invalid response structure");
       } catch (e) {
-        console.warn(`Failed to parse JSON from proxy: ${proxyUrl}`, e);
+        const errorMsg = `Proxy ${i + 1} JSON parse error: ${e.message}`;
+        errors.push(errorMsg);
+        console.warn(`${errorMsg}: ${proxyUrl.substring(0, 80)}...`);
         continue;
       }
     } catch (err) {
-      console.warn(`Proxy error: ${wrapUrl(url)}`, err.message);
+      const errorMsg = `Proxy ${i + 1} network error: ${err.message}`;
+      errors.push(errorMsg);
+      console.warn(`${errorMsg}: ${wrapUrl(url).substring(0, 80)}...`);
       continue;
     }
   }
-  throw new Error("All CORS proxies failed");
+  
+  const errorSummary = errors.length > 0 ? `\nErrors: ${errors.slice(0, 3).join('; ')}` : '';
+  throw new Error(`All ${CORS_PROXIES.length} CORS proxies failed${errorSummary}`);
 }
 
 /**
