@@ -13,6 +13,8 @@ async function proxyFetch(url) {
     const wrapUrl = CORS_PROXIES[i];
     try {
       const proxyUrl = wrapUrl(url);
+      if (!proxyUrl) continue; // Skip null/undefined proxy URLs
+      
       // Use simple GET request without custom headers to avoid CORS preflight
       const res = await fetch(proxyUrl, {
         signal: AbortSignal.timeout(API_CONFIG.timeout),
