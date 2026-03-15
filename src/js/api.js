@@ -43,10 +43,17 @@ async function proxyFetch(url) {
         // Handle AllOrigins wrapper format: { contents: "...", status: {...} }
         if (parsed.contents) {
           try {
-            parsed = JSON.parse(parsed.contents);
+            const contents = JSON.parse(parsed.contents);
+            parsed = contents;
           } catch {
-            // If contents is not JSON, it might be the actual response
-            parsed = parsed.contents;
+            // If contents is not JSON, it might be the actual response string
+            // Try parsing it as JSON
+            try {
+              parsed = JSON.parse(parsed.contents);
+            } catch {
+              // If still not JSON, return the contents as-is (shouldn't happen for Yahoo Finance)
+              throw new Error("AllOrigins returned non-JSON content");
+            }
           }
         }
         
