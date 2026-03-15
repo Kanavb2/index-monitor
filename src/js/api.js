@@ -56,12 +56,15 @@ async function proxyFetch(url) {
 
       errors.push(`${proxyUrl.substring(0, 60)}... => unexpected shape`);
     } catch (err) {
-      errors.push(`${proxyUrl.substring(0, 60)}... => ${err.message}`);
+      const msg = err.name === "AbortError" 
+        ? `timeout after ${API_CONFIG.timeout}ms`
+        : err.message || String(err);
+      errors.push(`${proxyUrl.substring(0, 60)}... => ${msg}`);
     }
   }
 
   console.warn("All proxies failed:", errors);
-  throw new Error("All CORS proxies failed");
+  throw new Error(`All CORS proxies failed: ${errors.join("; ")}`);
 }
 
 /**

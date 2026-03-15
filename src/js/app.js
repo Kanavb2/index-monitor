@@ -6,7 +6,7 @@
  * Runs an array of async tasks with a concurrency limit.
  * @param {Function[]} tasks - Array of () => Promise functions
  * @param {number} limit - Max concurrent tasks
- * @param {number} stagger - ms delay between starting each task
+ * @param {number|Function} stagger - ms delay between starting each task, or function returning delay
  */
 async function runConcurrent(tasks, limit, stagger) {
   const results = [];
@@ -15,7 +15,10 @@ async function runConcurrent(tasks, limit, stagger) {
   async function worker() {
     while (next < tasks.length) {
       const idx = next++;
-      if (idx > 0) await new Promise((r) => setTimeout(r, stagger));
+      if (idx > 0) {
+        const delay = typeof stagger === 'function' ? stagger() : stagger;
+        await new Promise((r) => setTimeout(r, delay));
+      }
       results[idx] = await tasks[idx]();
     }
   }
@@ -60,12 +63,13 @@ async function refresh() {
     }
   });
 
-  // 2 concurrent lanes, 500ms stagger between starts
-  await runConcurrent(tasks, 2, 500);
+  // 1 concurrent worker, 1200-1800ms stagger with jitter
+  // AllOrigins rate-limits aggressively, so we go fully sequential with randomness
+  await runConcurrent(tasks, 1, () => 1200 + Math.random() * 600);
 
-  // Retry failures after a cooldown
+  // Retry failures after a longer cooldown
   if (failed.length > 0) {
-    await new Promise((r) => setTimeout(r, 2000));
+    await new Promise((r) => setTimeout(r, 5000));
     const retryTasks = failed.map((i) => async () => {
       const idx = INDICES[i];
       try {
@@ -81,7 +85,7 @@ async function refresh() {
         // leave as error
       }
     });
-    await runConcurrent(retryTasks, 2, 500);
+    await runConcurrent(retryTasks, 1, () => 1200 + Math.random() * 600);
   }
 
   rebindAllTooltips(getLatestResults());
