@@ -40,21 +40,10 @@ async function proxyFetch(url) {
       try {
         let parsed = JSON.parse(text);
         
-        // Handle AllOrigins wrapper format: { contents: "...", status: {...} }
+        // Handle AllOrigins /get endpoint wrapper format: { contents: "JSON_STRING", status: {...} }
         if (parsed.contents) {
-          try {
-            const contents = JSON.parse(parsed.contents);
-            parsed = contents;
-          } catch {
-            // If contents is not JSON, it might be the actual response string
-            // Try parsing it as JSON
-            try {
-              parsed = JSON.parse(parsed.contents);
-            } catch {
-              // If still not JSON, return the contents as-is (shouldn't happen for Yahoo Finance)
-              throw new Error("AllOrigins returned non-JSON content");
-            }
-          }
+          // AllOrigins wraps the response in a contents field as a JSON string
+          parsed = JSON.parse(parsed.contents);
         }
         
         // Validate that we got actual data
