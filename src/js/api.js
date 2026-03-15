@@ -12,6 +12,7 @@ async function proxyFetch(url) {
 
   for (const proxy of CORS_PROXIES) {
     const proxyUrl = proxy.wrap(url);
+    if (!proxyUrl) continue;
     try {
       // Bare fetch -- no headers, no mode, no credentials override.
       // This guarantees a simple GET that never triggers preflight.
