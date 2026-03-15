@@ -15,15 +15,40 @@ async function refresh() {
   setLatestResults(INDICES.map((i) => ({ ...i, ok: false, err: false })));
   renderSummary(getLatestResults(), INDICES.length);
 
-  // Fetch indices in small batches to avoid rate-limiting from AllOrigins.
-  // Firing all 20+ requests at once causes it to drop CORS headers.
-  const BATCH_SIZE = 3;
-  const BATCH_DELAY = 400; // ms between batches
+  // Fetch one at a time with a pause between each request.
+  // AllOrigins rate-limits aggressively -- even small batches get throttled.
+  const DELAY = 600; // ms between requests
+  const failed = [];
 
-  for (let b = 0; b < INDICES.length; b += BATCH_SIZE) {
-    const batch = INDICES.slice(b, b + BATCH_SIZE);
-    const batchPromises = batch.map(async (idx) => {
-      const i = INDICES.indexOf(idx);
+  for (let i = 0; i < INDICES.length; i++) {
+    const idx = INDICES[i];
+    try {
+      const result = await fetchIndex(idx);
+      setCache(idx.sym, result);
+      const results = getLatestResults();
+      results[i] = result;
+      setLatestResults(results);
+      updateMarker(result);
+      renderSummary(getLatestResults(), INDICES.length);
+    } catch {
+      failed.push(i);
+      const errData = { ...idx, ok: false, err: true };
+      const results = getLatestResults();
+      results[i] = errData;
+      setLatestResults(results);
+      updateMarker(errData);
+      renderSummary(getLatestResults(), INDICES.length);
+    }
+    if (i < INDICES.length - 1) {
+      await new Promise((r) => setTimeout(r, DELAY));
+    }
+  }
+
+  // Retry any that failed (AllOrigins may have been temporarily overwhelmed)
+  if (failed.length > 0) {
+    await new Promise((r) => setTimeout(r, 2000)); // longer cooldown
+    for (const i of failed) {
+      const idx = INDICES[i];
       try {
         const result = await fetchIndex(idx);
         setCache(idx.sym, result);
@@ -33,17 +58,9 @@ async function refresh() {
         updateMarker(result);
         renderSummary(getLatestResults(), INDICES.length);
       } catch {
-        const errData = { ...idx, ok: false, err: true };
-        const results = getLatestResults();
-        results[i] = errData;
-        setLatestResults(results);
-        updateMarker(errData);
-        renderSummary(getLatestResults(), INDICES.length);
+        // still failed -- leave as error
       }
-    });
-    await Promise.all(batchPromises);
-    if (b + BATCH_SIZE < INDICES.length) {
-      await new Promise((r) => setTimeout(r, BATCH_DELAY));
+      await new Promise((r) => setTimeout(r, DELAY));
     }
   }
 
